@@ -1,7 +1,7 @@
 [project]
 name = "midii"
-version = "0.1.0"
-description = "Add your description here"
+version = "0.1.2"
+description = "Midi Insights: midi analyzer"
 readme = "README.md"
 authors = [
     { name = "ccss17", email = "chansol0505@naver.com" }
