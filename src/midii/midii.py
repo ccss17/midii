@@ -106,9 +106,9 @@ class MidiFile(mido.MidiFile):
         ):
             raise ValueError
 
-        for i, track in enumerate(self.tracks):
+        for track in self.tracks:
             error = 0
-            for j, msg in enumerate(track):
+            for msg in track:
                 if msg.type in ["note_on", "note_off", "lyrics"]:
                     if not msg.time:
                         continue
@@ -116,8 +116,6 @@ class MidiFile(mido.MidiFile):
                         msg.time += error
                         error = 0
                     error = self._quantization(msg, unit=unit)
-            if error:
-                track[j].time += error
 
     def analysis(
         self,
