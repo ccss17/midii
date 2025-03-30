@@ -3,11 +3,6 @@
 from collections import namedtuple
 from enum import Enum
 
-DEFAULT_BPM = 120
-DEFAULT_TEMPO = 500000
-DEFAULT_TIME_SIGNATURE = (4, 4)
-DEFAULT_PPQN = 480
-DEFAULT_MEASURE_SPACE = 4
 
 NoteNamedTuple = namedtuple(
     "NoteNamedTuple", ["beat", "name_eng", "name_kor", "symbol", "name_short"]

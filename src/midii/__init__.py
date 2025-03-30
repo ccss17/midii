@@ -1,3 +1,3 @@
-from .midii import MidiAnalyzer
+from .midii import MidiFile
 from . import note
 from . import sample

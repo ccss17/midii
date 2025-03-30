@@ -1,13 +1,9 @@
 """midii"""
 
-import sys
 import string
-import json
-from pathlib import Path
 
 import numpy as np
-import mido as md
-from mido import MidiFile, Message, MetaMessage
+import mido
 
 from rich import print as rprint
 from rich.console import Console
@@ -18,12 +14,18 @@ from .note import (
     Note_all,
     Rest_all,
     COLOR,
-    DEFAULT_TEMPO,
-    DEFAULT_TIME_SIGNATURE,
-    DEFAULT_PPQN,
 )
 
+DEFAULT_TICKS_PER_BEAT = 480
+DEFAULT_TIME_SIGNATURE = (4, 4)
+DEFAULT_TEMPO = 500000
+DEFAULT_BPM = 120
+DEFAULT_MEASURE_SPACE = 4
 
+
+# Adapted from pretty_midi (utilities.py)
+# Source: https://github.com/craffel/pretty-midi/blob/main/pretty_midi/utilities.py
+# Original License: MIT
 def note_number_to_name(note_number):
     """Convert a MIDI note number to its name, in the format
     ``'(note)(accidental)(octave number)'`` (e.g. ``'C#4'``).
@@ -64,77 +66,58 @@ def beat2tick(beat, ppqn):
     return int(beat * ppqn)
 
 
-class MidiAnalyzer:
+class MidiFile(mido.MidiFile):
     """Class for analysis midi file"""
 
     def __init__(
         self,
-        midi_path,
+        filename=None,
+        file=None,
+        type=1,
+        ticks_per_beat=DEFAULT_TICKS_PER_BEAT,
+        charset="latin1",
+        debug=False,
+        clip=False,
+        tracks=None,
         convert_1_to_0=False,
-        encoding="utf-8",
+        lyric_encoding="utf-8",
     ):
-        sys.stdout.reconfigure(encoding="utf-8")  # printing encoding
-        self.midi_path = midi_path
-        self.mid = MidiFile(self.midi_path)
-        self.ppqn = self.mid.ticks_per_beat
+        super().__init__(
+            filename=filename,
+            file=file,
+            type=type,
+            ticks_per_beat=ticks_per_beat,
+            charset=charset,
+            debug=debug,
+            clip=clip,
+            tracks=tracks,
+        )
+
+        self.lyric_encoding = lyric_encoding
         self.convert_1_to_0 = convert_1_to_0
 
-        if self.mid.type == 1 and self.convert_1_to_0:
-            self.mid.tracks = [md.merge_tracks(self.mid.tracks)]
-
-        self.track_analyzers = [
-            MidiTrackAnalyzer(
-                track,
-                self.ppqn,
-                encoding=encoding,
-                convert_1_to_0=convert_1_to_0,
-            )
-            for track in self.mid.tracks
-        ]
+        if self.type == 1 and self.convert_1_to_0:
+            self.tracks = [mido.merge_tracks(self.tracks)]
 
     def quantization(self, unit="32"):
         """quantization"""
-        for i, track_analyzer in enumerate(self.track_analyzers):
-            self.mid.tracks[i] = track_analyzer.quantization(unit=unit)
+        if not any(
+            [unit == n.value.name_short.split("/")[-1] for n in list(Note)]
+        ):
+            raise ValueError
 
-    def split_space_note(self, remove_silence_threshold=0.3):
-        """split_space_note"""
-        for i, track_analyzer in enumerate(self.track_analyzers):
-            self.mid.tracks[i] = track_analyzer.split_space_note(
-                remove_silence_threshold=remove_silence_threshold
-            )
-
-    def slice_chunks_time(self, chunks_time):
-        """slice_chunks_time"""
-        if self.mid.type == 1 and not self.convert_1_to_0:
-            raise RuntimeError
-        result = []
-        for chunk_time in chunks_time:
-            begin, end = chunk_time
-            result.append(
-                self.track_analyzers[0].slice(begin / 100, end / 100)
-            )
-        return result
-
-    def slice_slience(self):
-        """slice_slience"""
-        if self.mid.type == 1 and not self.convert_1_to_0:
-            raise RuntimeError
-        return self.track_analyzers[0].slice_slience()
-
-    def slice(self, begin, end):
-        """slice"""
-        if self.mid.type == 1 and not self.convert_1_to_0:
-            raise RuntimeError
-        return self.track_analyzers[0].slice(begin, end)
-
-    def to_json(self, dir_path=None):
-        """to_json"""
-        if self.mid.type == 1 and not self.convert_1_to_0:
-            raise RuntimeError
-        return self.track_analyzers[0].to_json(
-            file_path=self.mid.filename, dir_path=dir_path
-        )
+        for i, track in enumerate(self.tracks):
+            error = 0
+            for j, msg in enumerate(track):
+                if msg.type in ["note_on", "note_off", "lyrics"]:
+                    if not msg.time:
+                        continue
+                    if error:
+                        msg.time += error
+                        error = 0
+                    error = self._quantization(msg, unit=unit)
+            if error:
+                track[j].time += error
 
     def analysis(
         self,
@@ -153,29 +136,30 @@ class MidiAnalyzer:
         header_style = "black on white blink"
         header_info = "\n".join(
             [
-                f"[{header_style}]mid file type: {self.mid.type}",
-                f"ticks per beat: {self.ppqn}",
-                f"total duration: {self.mid.length}[/{header_style}]",
+                f"[{header_style}]mid file type: {self.type}",
+                f"ticks per beat: {self.ticks_per_beat}",
+                f"total duration: {self.length}[/{header_style}]",
             ]
         )
         header_panel = Panel(
             header_info,
             title="[MIDI File Header]",
-            subtitle=f"{self.mid.filename}",
+            subtitle=f"{self.filename}",
             style=f"{header_style}",
             border_style=f"{header_style}",
         )
         rprint(header_panel)
 
-        for i, track_analyzer in enumerate(self.track_analyzers):
+        for i, track in enumerate(self.tracks):
             console = Console()
             console.rule(
-                "[#ffffff on #4707a8]" + f'Track {i}: "{track_analyzer.name}"'
+                "[#ffffff on #4707a8]" + f'Track {i}: "{track.name}"'
                 f"[/#ffffff on #4707a8]",
                 style="#ffffff on #4707a8",
             )
-            if track_list is None or track_analyzer.name in track_list:
-                track_analyzer.analysis(
+            if track_list is None or track.name in track_list:
+                self._analysis(
+                    track,
                     track_bound=track_bound,
                     blind_note=blind_note,
                     blind_time=blind_time,
@@ -183,323 +167,48 @@ class MidiAnalyzer:
                     blind_note_info=blind_note_info,
                 )
 
-
-class MidiTrackAnalyzer:
-    """Class for analysis midi track"""
-
-    def __init__(self, track, ppqn, encoding="utf-8", convert_1_to_0=False):
-        self.track = track
-        self.name = track.name
-        self.ppqn = ppqn
-        self.encoding = encoding
-        self.convert_1_to_0 = convert_1_to_0
-        self._init_values()
-
-    def _init_values(self):
-        self.time_signature = DEFAULT_TIME_SIGNATURE
-        self.tempo = DEFAULT_TEMPO
-        self.length = 0
-
-    def _get_quantized_note(self, msg, beat):
-        result = []
-        if msg.type == "note_on":
-            result.append(Message("note_off", time=beat2tick(beat, self.ppqn)))
-        elif msg.type == "note_off":
-            q_msg = msg.copy()
-            q_msg.time = beat2tick(beat, self.ppqn)
-            _msg_on = Message(
-                "note_on", note=msg.note, velocity=msg.velocity, time=0
-            )
-            result.append(q_msg)
-            result.append(_msg_on)
-        return result
-
     def _quantization(self, msg, unit="32"):
         q_time = None
         total_q_time = 0
         error = 0
         for note_item in list(Note):
-            beat = tick2beat(msg.time, self.ppqn)
+            beat = tick2beat(msg.time, self.ticks_per_beat)
             q_beat = note_item.value.beat
-            q_time = beat2tick(q_beat, self.ppqn)
+            q_time = beat2tick(q_beat, self.ticks_per_beat)
             if beat > q_beat:
                 msg.time -= q_time
                 total_q_time += q_time
             elif beat == q_beat:  # msg is quantized
                 msg.time += total_q_time
-                return msg, error
+                return error
+                # return msg, error
             if unit in note_item.value.name_short:
                 beat_unit = note_item.value.beat  # beat_unit
                 break
 
         # beat in [0, beat_unit), i.e. beat_unit=0.125
-        beat = tick2beat(msg.time, self.ppqn)
+        beat = tick2beat(msg.time, self.ticks_per_beat)
         if beat < beat_unit / 2:  # beat in [0, beat_unit/2)
             error = msg.time
             msg.time = 0  # approximate to beat=0
         elif beat < beat_unit:  # beat in [beat_unit/2, beat_unit)
-            error = msg.time - beat2tick(beat_unit, self.ppqn)
+            error = msg.time - beat2tick(beat_unit, self.ticks_per_beat)
             # approximate to beat=beat_unit
-            msg.time = beat2tick(beat_unit, self.ppqn)
+            msg.time = beat2tick(beat_unit, self.ticks_per_beat)
         msg.time += total_q_time
-        return msg, error
+        return error
+        # return msg, error
 
-    def quantization(self, unit="32"):
-        """quantization"""
-        if not any(
-            [unit == n.value.name_short.split("/")[-1] for n in list(Note)]
-        ):
-            raise ValueError
-
-        error = 0
-        last_note = 0
-        for i, msg in enumerate(self.track):
-            if msg.type in ["note_on", "note_off", "lyrics"]:
-                if not msg.time:
-                    continue
-                if error:
-                    msg.time += error
-                    error = 0
-                msg, error = self._quantization(msg, unit=unit)
-                last_note = i
-
-        if error:
-            self.track[last_note].time += error
-        return self.track
-
-    def slice_slience(self):
-        """slice_slience"""
-        result = []
-        chunk = []
-        for msg in self.track:
-            if msg.type == "lyrics":
-                mmal = MidiMessageAnalyzer_lyrics(msg, encoding=self.encoding)
-                if mmal.lyric == " ":
-                    if chunk:
-                        result.append(chunk)
-                        chunk = []
-                else:
-                    chunk.append(mmal.lyric)
-            if msg.type == "note_off":
-                chunk.append(msg.note)
-
-    def slice(self, begin, end):
-        """slice"""
-        pitchs = []
-        durations = []
-        lyrics = ""
-        prev_lyric = ""
-        lyric = ""
-        total_time = 0
-        total_secs = 0
-        prev_total_secs = 0
-        for msg in self.track:
-            total_time += msg.time
-            if msg.type == "note_off":
-                prev_total_secs = total_secs
-            if msg.type == "lyrics":
-                prev_lyric = lyric
-                mmal = MidiMessageAnalyzer_lyrics(msg, encoding=self.encoding)
-                if self.encoding != mmal.encoding:
-                    self.encoding = mmal.encoding
-                lyric = mmal.lyric
-            total_secs += md.tick2second(
-                msg.time,
-                ticks_per_beat=self.ppqn,
-                tempo=self.tempo,
-            )
-            if msg.type == "set_tempo":
-                self.tempo = msg.tempo
-            if begin < total_secs < end:
-                match msg.type:
-                    case "lyrics":
-                        if not lyrics:
-                            lyrics += prev_lyric
-                        lyrics += lyric
-                    case "note_off":
-                        pitchs.append(msg.note)
-                        if not durations:
-                            durations.append(total_secs - begin)
-                        else:
-                            duration = md.tick2second(
-                                msg.time,
-                                ticks_per_beat=self.ppqn,
-                                tempo=self.tempo,
-                            )
-                            durations.append(duration)
-            elif end < total_secs:
-                match msg.type:
-                    case "note_off":
-                        pitchs.append(msg.note)
-                        duration = md.tick2second(
-                            msg.time,
-                            ticks_per_beat=self.ppqn,
-                            tempo=self.tempo,
-                        )
-                        durations.append(end - prev_total_secs)
-                        rprint(len(pitchs), len(durations), len(lyrics))
-                        rprint(pitchs, durations, lyrics)
-                        if not len(pitchs) == len(durations) == len(lyrics):
-                            raise ValueError
-                        return np.array(pitchs), np.array(durations), lyrics
-                    case "end_of_track":
-                        return np.array(pitchs), np.array(durations), lyrics
-
-        return None, None, None
-
-    def split_space_note(self, remove_silence_threshold=0.3):
-        """split_space_note"""
-        modified_track = []
-        error = 0
-        note_in = False
-        for msg in self.track:
-            match msg.type:
-                case "note_on":
-                    note_in = True
-                    time = md.tick2second(
-                        msg.time,
-                        ticks_per_beat=self.ppqn,
-                        tempo=self.tempo,
-                    )
-                    if time > remove_silence_threshold:
-                        modified_track += [
-                            Message("note_on", time=0),
-                            MetaMessage("lyrics", text=" "),
-                            Message("note_off", time=msg.time),
-                        ]
-                    else:  # just remove time
-                        error += time
-                    msg.time = 0
-                case "note_off":
-                    note_in = False
-                    if error:
-                        msg.time += md.second2tick(
-                            error, ticks_per_beat=self.ppqn, tempo=self.tempo
-                        )
-                        error = 0
-                case "set_tempo":
-                    time = md.tick2second(
-                        msg.time,
-                        ticks_per_beat=self.ppqn,
-                        tempo=self.tempo,
-                    )
-                    if not note_in and time > remove_silence_threshold:
-                        modified_track += [
-                            Message("note_on", time=0),
-                            MetaMessage("lyrics", text=" "),
-                            Message("note_off", time=msg.time),
-                        ]
-                    else:
-                        error += time
-                    msg.time = 0
-                    self.tempo = msg.tempo
-                case _:
-                    time = md.tick2second(
-                        msg.time,
-                        ticks_per_beat=self.ppqn,
-                        tempo=self.tempo,
-                    )
-                    if not note_in and time > remove_silence_threshold:
-                        modified_track += [
-                            Message("note_on", time=0),
-                            MetaMessage("lyrics", text=" "),
-                            Message("note_off", time=msg.time),
-                        ]
-                    else:
-                        error += time
-                    msg.time = 0
-            modified_track.append(msg)
-        self.track = modified_track
-        return self.track
-
-    def print_note_num(self, note_num):
+    def print_note_num(self, note_num, tempo, time_signature):
         """print_note_num"""
         color = "color(240)" if note_num == 0 else "color(47)"
-        bpm = round(
-            md.tempo2bpm(self.tempo, time_signature=self.time_signature)
-        )
+        bpm = round(mido.tempo2bpm(tempo, time_signature=time_signature))
         info = f"[bold {color}]Total item num of BPM({bpm}): " + f"{note_num}"
         Console().rule(info, style=f"{color}")
 
-    def to_json(self, file_path, dir_path=None):
-        """to_json"""
-        self._init_values()
-        total_time = 0
-        lyric = ""
-        data = {"notes": []}
-        note_data = {
-            "start_time": None,
-            "end_time": None,
-            "length": None,
-            "pitch": None,
-            "lyric": None,
-        }
-        duration = 0
-        for i, msg in enumerate(self.track):
-            total_time += msg.time
-            duration += msg.time
-            self.length += md.tick2second(
-                msg.time,
-                ticks_per_beat=self.ppqn,
-                tempo=self.tempo,
-            )
-            msg_kwarg = {
-                "msg": msg,
-                "ppqn": self.ppqn,
-                "tempo": self.tempo,
-                "idx": i,
-                "length": self.length,
-            }
-            match msg.type:
-                case "note_on":
-                    note_on_time = self.length
-                    duration = 0
-                case "note_off":
-                    _note_data = note_data.copy()
-                    _note_data["start_time"] = note_on_time
-                    _note_data["end_time"] = self.length
-                    _note_data["length"] = md.tick2second(
-                        duration,
-                        ticks_per_beat=self.ppqn,
-                        tempo=self.tempo,
-                    )
-                    _note_data["pitch"] = msg.note
-                    if not lyric:
-                        raise ValueError
-                    _note_data["lyric"] = lyric
-                    if None in _note_data.values():
-                        raise ValueError
-                    data["notes"].append(_note_data)
-                case "lyrics":
-                    mmal = MidiMessageAnalyzer_lyrics(
-                        **msg_kwarg,
-                        encoding=self.encoding,
-                    )
-                    if self.encoding != mmal.encoding:
-                        self.encoding = mmal.encoding
-                    _, lyric = mmal.analysis()
-                case "set_tempo":
-                    _, self.tempo = MidiMessageAnalyzer_set_tempo(
-                        **msg_kwarg,
-                        time_signature=self.time_signature,
-                    ).analysis()
-                case "time_signature":
-                    _, self.time_signature = (
-                        MidiMessageAnalyzer_time_signature(
-                            **msg_kwarg
-                        ).analysis()
-                    )
-        if dir_path is None:
-            dir_path = Path("")
-        else:
-            dir_path = Path(dir_path)
-            dir_path.mkdir(exist_ok=True, parents=True)
-        file_path = dir_path / Path(file_path).with_suffix(".json").name
-        with open(file_path, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=4, ensure_ascii=False)
-
-    def analysis(
+    def _analysis(
         self,
+        track,
         track_bound=None,
         blind_note=False,
         blind_time=False,
@@ -507,7 +216,9 @@ class MidiTrackAnalyzer:
         blind_note_info=False,
     ):
         """analysis track"""
-        self._init_values()
+        tempo = DEFAULT_TEMPO
+        time_signature = DEFAULT_TIME_SIGNATURE
+        length = 0
         note_address = 0
         note_num = 0
         first_tempo = True
@@ -517,21 +228,21 @@ class MidiTrackAnalyzer:
             track_bound = float("inf")
         lyric = ""
         total_time = 0
-        for i, msg in enumerate(self.track):
+        for i, msg in enumerate(track):
             if i > track_bound:
                 break
             total_time += msg.time
-            self.length += md.tick2second(
+            length += mido.tick2second(
                 msg.time,
-                ticks_per_beat=self.ppqn,
-                tempo=self.tempo,
+                ticks_per_beat=self.ticks_per_beat,
+                tempo=tempo,
             )
             msg_kwarg = {
                 "msg": msg,
-                "ppqn": self.ppqn,
-                "tempo": self.tempo,
+                "ppqn": self.ticks_per_beat,
+                "tempo": tempo,
                 "idx": i,
-                "length": self.length,
+                "length": length,
             }
             match msg.type:
                 case "note_on":
@@ -561,10 +272,10 @@ class MidiTrackAnalyzer:
                 case "lyrics":
                     mmal = MidiMessageAnalyzer_lyrics(
                         **msg_kwarg,
-                        encoding=self.encoding,
+                        encoding=self.lyric_encoding,
                     )
-                    if self.encoding != mmal.encoding:
-                        self.encoding = mmal.encoding
+                    if self.lyric_encoding != mmal.encoding:
+                        self.lyric_encoding = mmal.encoding
                     result, _lyric = mmal.analysis(
                         note_address=note_address,
                         blind_time=blind_time,
@@ -574,34 +285,34 @@ class MidiTrackAnalyzer:
                     lyric += _lyric
                 case "measure":
                     result = MidiMessageAnalyzer_measure(
-                        self.time_signature
+                        time_signature
                     ).analysis()
                 case "text" | "track_name":
                     mmat = MidiMessageAnalyzer_text(
                         **msg_kwarg,
-                        encoding=self.encoding,
+                        encoding=self.lyric_encoding,
                     )
-                    if self.encoding != mmat.encoding:
-                        self.encoding = mmat.encoding
+                    if self.lyric_encoding != mmat.encoding:
+                        self.lyric_encoding = mmat.encoding
                     result = mmat.analysis(blind_time=blind_time)
                 case "set_tempo":
                     if not first_tempo and self.convert_1_to_0:
-                        self.print_note_num(note_num)
+                        self.print_note_num(note_num, tempo, time_signature)
                     first_tempo = False
-                    result, self.tempo = MidiMessageAnalyzer_set_tempo(
+                    result, tempo = MidiMessageAnalyzer_set_tempo(
                         **msg_kwarg,
-                        time_signature=self.time_signature,
+                        time_signature=time_signature,
                     ).analysis(blind_time=blind_time)
                     if prev_tempo is None:
-                        prev_tempo = self.tempo
+                        prev_tempo = tempo
                     if note_num:
-                        prev_tempo = self.tempo
+                        prev_tempo = tempo
                         note_num = 0
                     else:
-                        self.tempo = prev_tempo
+                        tempo = prev_tempo
                 case "end_of_track":
                     if self.convert_1_to_0:
-                        self.print_note_num(note_num)
+                        self.print_note_num(note_num, tempo, time_signature)
                     result = MidiMessageAnalyzer_end_of_track(
                         **msg_kwarg
                     ).analysis(blind_time=blind_time)
@@ -610,7 +321,7 @@ class MidiTrackAnalyzer:
                         **msg_kwarg
                     ).analysis(blind_time=blind_time)
                 case "time_signature":
-                    result, self.time_signature = (
+                    result, time_signature = (
                         MidiMessageAnalyzer_time_signature(
                             **msg_kwarg
                         ).analysis(blind_time=blind_time)
@@ -626,17 +337,15 @@ class MidiTrackAnalyzer:
             if msg.type in ["note_on", "note_off", "lyrics"]:
                 note_num += 1
 
-        rprint(f"Track lyric encode: {self.encoding}")
-        self.length = md.tick2second(
+        rprint(f"Track lyric encode: {self.lyric_encoding}")
+        length = mido.tick2second(
             total_time,
-            ticks_per_beat=self.ppqn,
-            tempo=self.tempo,
+            ticks_per_beat=self.ticks_per_beat,
+            tempo=tempo,
         )
         rprint("Track total secs/time: " + f"{self.length}/{total_time}")
-        bpm = round(
-            md.tempo2bpm(self.tempo, time_signature=self.time_signature)
-        )
-        rprint("bpm(tempo): " + f"{bpm}({self.tempo})")
+        bpm = round(mido.tempo2bpm(tempo, time_signature=time_signature))
+        rprint("bpm(tempo): " + f"{bpm}({tempo})")
         if not blind_lyric:
             print(f'LYRIC: "{lyric}"')
 
@@ -647,7 +356,7 @@ class MidiMessageAnalyzer:
     def __init__(
         self,
         msg,
-        ppqn=DEFAULT_PPQN,
+        ppqn=DEFAULT_TICKS_PER_BEAT,
         tempo=DEFAULT_TEMPO,
         idx=0,
         length=0,
@@ -667,7 +376,7 @@ class MidiMessageAnalyzer:
         if self.msg.time:
             main_color = "#ffffff"
             sub_color = "white"
-            time = md.tick2second(
+            time = mido.tick2second(
                 self.msg.time,
                 ticks_per_beat=self.ppqn,
                 tempo=self.tempo,
@@ -704,7 +413,7 @@ class MidiMessageAnalyzer_set_tempo(MidiMessageAnalyzer):
     def __init__(
         self,
         msg,
-        ppqn=DEFAULT_PPQN,
+        ppqn=DEFAULT_TICKS_PER_BEAT,
         tempo=DEFAULT_TEMPO,
         idx=0,
         length=0,
@@ -715,7 +424,7 @@ class MidiMessageAnalyzer_set_tempo(MidiMessageAnalyzer):
 
     def analysis(self, blind_time=False):
         bpm = round(
-            md.tempo2bpm(self.msg.tempo, time_signature=self.time_signature)
+            mido.tempo2bpm(self.msg.tempo, time_signature=self.time_signature)
         )
         result = self.result(
             head=self.info_type(),
@@ -787,7 +496,7 @@ class MidiMessageAnalyzer_text(MidiMessageAnalyzer):
     def __init__(
         self,
         msg,
-        ppqn=DEFAULT_PPQN,
+        ppqn=DEFAULT_TICKS_PER_BEAT,
         tempo=DEFAULT_TEMPO,
         idx=0,
         length=0,
@@ -828,7 +537,7 @@ class MidiMessageAnalyzer_SoundUnit(MidiMessageAnalyzer):
     def __init__(
         self,
         msg,
-        ppqn=DEFAULT_PPQN,
+        ppqn=DEFAULT_TICKS_PER_BEAT,
         tempo=DEFAULT_TEMPO,
         idx=0,
         length=0,
@@ -1021,7 +730,7 @@ class MidiMessageAnalyzer_lyrics(
     def __init__(
         self,
         msg,
-        ppqn=DEFAULT_PPQN,
+        ppqn=DEFAULT_TICKS_PER_BEAT,
         tempo=DEFAULT_TEMPO,
         idx=0,
         length=0,
