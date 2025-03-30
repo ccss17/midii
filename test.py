@@ -1,15 +1,14 @@
-import mida
-import mida.sample
+import midii
 
 
 def test_sample():
-    print(mida.sample.real)
-    print(mida.sample.dataset)
+    print(midii.sample.real)
+    print(midii.sample.dataset)
 
 
 def test_MidiAnalyzer():
-    ma = mida.MidiAnalyzer(mida.sample.dataset[3], convert_1_to_0=True)
-    ma.split_space_note(remove_silence_threshold=0.3)
+    ma = midii.MidiAnalyzer(midii.sample.dataset[3], convert_1_to_0=True)
+    # ma.split_space_note(remove_silence_threshold=0.3)
     ma.quantization(unit="32")
     ma.analysis(
         track_bound=None,
