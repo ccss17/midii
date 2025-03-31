@@ -1,8 +1,5 @@
-import midii
-
-
 def test_import():
-    pass
+    import midii
 
 
 if __name__ == "__main__":

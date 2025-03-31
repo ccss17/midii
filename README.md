@@ -47,11 +47,15 @@ pip install midii
 
 ## Example
 
+### `print_tracks`
+
 - `print_tracks`: `mido.MidiFile.print_tracks` &rarr; `midii.MidiFile.print_tracks` 
 
     ![](figure/print.png)
 
     ![](figure/print2.png)
+
+### `quantization`
 
 - `quantization(unit="32")`:
 
