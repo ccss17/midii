@@ -1,20 +1,64 @@
 # MIDI Insights
 
-```shell
-pip install midii
-```
-
-## example
+This package inherits `MidiFile` of [`mido`](https://github.com/mido/mido), adding note duration quantization functionality `MidiFile.quantization` and improving the `MidiFile.print_tracks` method.
 
 ```python
 import midii
 
-ma = midii.MidiAnalyzer(midii.sample.dataset[1], convert_1_to_0=True)
-ma.quantization(unit="32")
-ma.analysis(
+mid = midii.MidiFile(
+    midii.sample.dataset[1], # or 'song.mid'
+    convert_1_to_0=True, lyric_encoding="utf-8"
+)
+mid.quantization(unit="32")
+mid.print_tracks(
     track_bound=None,
     track_list=None,
     blind_note_info=True,
-    blind_lyric=False,
+    blind_lyric=True,
 )
 ```
+
+## Installation
+
+```shell
+pip install midii
+```
+
+## API
+
+- `class midii.MidiFile(filename=None, file=None, type=1, ticks_per_beat=480, charset='latin1', debug=False, clip=False, tracks=None, convert_1_to_0=False, lyric_encoding='utf-8')`
+
+    The parameters of this class are no different from those of the `mido.MidiFile` class it inherits, except for `convert_1_to_0=False` and `lyric_encoding='utf-8'`. 
+
+    If you want to convert midi file type `1` to `0`, pass `convert_1_to_0=True`. 
+
+    `lyric_encoding` specify encoding of lyric data.
+
+    - `quantization(unit="32")`: Quantize note duration. You can define least unit of quantization from `"1"`(whole note), `"2"`(half note), `"4"`(quarter note), `"8"`(eighth note), `"16"`(sixteenth note), `"32"`(thirty-second note), `"64"`(sixty-fourth note), `"128"`(hundred twenty-eighth note), `"256"`(two hundred fifty-sixth note)
+
+        The smaller the minimum unit, the less sync error with the original, and the weaker the quantization effect. As the minimum unit becomes larger, the sync error with the original increases and the quantization effect increases.
+
+
+    - `print_tracks(track_bound=None, blind_note=False, blind_time=False, blind_lyric=True, track_list=None, blind_note_info=False)`: An overriding function that improves the existing `mido.print_tracks`.
+
+        By default it will print all lines of track. By setting like `track_bound=20`, You can define upper bound of lines to be printed.
+
+        By default it will prints all tracks. You can specify the tracks you want to output in the list `track_list`. For example, `track_list=[]`, or `track_list=["piano", "intro"]`.
+
+## Example
+
+- `print_tracks`: `mido.MidiFile.print_tracks` &rarr; `midii.MidiFile.print_tracks` 
+
+    ![](figure/print.png)
+
+    ![](figure/print2.png)
+
+- `quantization(unit="32")`:
+
+    ![](figure/q1.png)
+
+    ![](figure/q2.png)
+
+## License
+
+MIT

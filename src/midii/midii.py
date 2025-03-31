@@ -97,73 +97,7 @@ class MidiFile(mido.MidiFile):
         self.convert_1_to_0 = convert_1_to_0
 
         if self.type == 1 and self.convert_1_to_0:
-            self.tracks = [mido.merge_tracks(self.tracks)]
-
-    def quantization(self, unit="32"):
-        """quantization"""
-        if not any(
-            [unit == n.value.name_short.split("/")[-1] for n in list(Note)]
-        ):
-            raise ValueError
-
-        for track in self.tracks:
-            error = 0
-            for msg in track:
-                if msg.type in ["note_on", "note_off", "lyrics"]:
-                    if not msg.time:
-                        continue
-                    if error:
-                        msg.time += error
-                        error = 0
-                    error = self._quantization(msg, unit=unit)
-
-    def analysis(
-        self,
-        track_bound=None,
-        blind_note=False,
-        blind_time=False,
-        blind_lyric=True,
-        track_list=None,
-        blind_note_info=False,
-    ):
-        """method to analysis"""
-
-        if track_bound is None:
-            track_bound = float("inf")
-        # meta information of midi file
-        header_style = "black on white blink"
-        header_info = "\n".join(
-            [
-                f"[{header_style}]mid file type: {self.type}",
-                f"ticks per beat: {self.ticks_per_beat}",
-                f"total duration: {self.length}[/{header_style}]",
-            ]
-        )
-        header_panel = Panel(
-            header_info,
-            title="[MIDI File Header]",
-            subtitle=f"{self.filename}",
-            style=f"{header_style}",
-            border_style=f"{header_style}",
-        )
-        rprint(header_panel)
-
-        for i, track in enumerate(self.tracks):
-            console = Console()
-            console.rule(
-                "[#ffffff on #4707a8]" + f'Track {i}: "{track.name}"'
-                f"[/#ffffff on #4707a8]",
-                style="#ffffff on #4707a8",
-            )
-            if track_list is None or track.name in track_list:
-                self._analysis(
-                    track,
-                    track_bound=track_bound,
-                    blind_note=blind_note,
-                    blind_time=blind_time,
-                    blind_lyric=blind_lyric,
-                    blind_note_info=blind_note_info,
-                )
+            self.tracks = [self.merged_track]
 
     def _quantization(self, msg, unit="32"):
         q_time = None
@@ -195,7 +129,24 @@ class MidiFile(mido.MidiFile):
             msg.time = beat2tick(beat_unit, self.ticks_per_beat)
         msg.time += total_q_time
         return error
-        # return msg, error
+
+    def quantization(self, unit="32"):
+        """note duration quantization"""
+        if not any(
+            [unit == n.value.name_short.split("/")[-1] for n in list(Note)]
+        ):
+            raise ValueError
+
+        for track in self.tracks:
+            error = 0
+            for msg in track:
+                if msg.type in ["note_on", "note_off", "lyrics"]:
+                    if not msg.time:
+                        continue
+                    if error:
+                        msg.time += error
+                        error = 0
+                    error = self._quantization(msg, unit=unit)
 
     def print_note_num(self, note_num, tempo, time_signature):
         """print_note_num"""
@@ -346,6 +297,56 @@ class MidiFile(mido.MidiFile):
         rprint("bpm(tempo): " + f"{bpm}({tempo})")
         if not blind_lyric:
             print(f'LYRIC: "{lyric}"')
+
+    def _str_panel(self):
+        # meta information of midi file
+        header_style = "black on white blink"
+        header_info = "\n".join(
+            [
+                f"[{header_style}]mid file type: {self.type}",
+                f"ticks per beat: {self.ticks_per_beat}",
+                f"total duration: {self.length}[/{header_style}]",
+            ]
+        )
+        return Panel(
+            header_info,
+            title="[MIDI File Header]",
+            subtitle=f"{self.filename}",
+            style=f"{header_style}",
+            border_style=f"{header_style}",
+        )
+
+    def print_tracks(
+        self,
+        track_bound=None,
+        blind_note=False,
+        blind_time=False,
+        blind_lyric=True,
+        track_list=None,
+        blind_note_info=False,
+    ):
+        """method to analysis"""
+
+        if track_bound is None:
+            track_bound = float("inf")
+        rprint(self._str_panel())
+
+        _style_track_line = "#ffffff on #4707a8"
+        for i, track in enumerate(self.tracks):
+            Console().rule(
+                f'[{_style_track_line}]Track {i}: "{track.name}"'
+                f"[/{_style_track_line}]",
+                style=f"{_style_track_line}",
+            )
+            if track_list is None or track.name in track_list:
+                self._analysis(
+                    track,
+                    track_bound=track_bound,
+                    blind_note=blind_note,
+                    blind_time=blind_time,
+                    blind_lyric=blind_lyric,
+                    blind_note_info=blind_note_info,
+                )
 
 
 class MidiMessageAnalyzer:
@@ -499,27 +500,10 @@ class MidiMessageAnalyzer_text(MidiMessageAnalyzer):
         idx=0,
         length=0,
         encoding="utf-8",
-        encoding_alternative="cp949",
     ):
         super().__init__(msg, ppqn, tempo=tempo, idx=idx, length=length)
-        self._init_encoding(
-            encoding=encoding, encoding_alternative=encoding_alternative
-        )
-
-    def _init_encoding(self, encoding="utf-8", encoding_alternative="cp949"):
         self.encoded_text = self.msg.bin()[3:]
-        self.encoding = self.determine_encoding(encoding, encoding_alternative)
-
-    def determine_encoding(self, *encoding_list):
-        """determine_encoding"""
-        for encoding in encoding_list:
-            try:
-                self.encoded_text.decode(encoding)
-            except UnicodeDecodeError:
-                continue
-            else:
-                return encoding
-        raise UnicodeDecodeError
+        self.encoding = encoding
 
     def analysis(self, blind_time=False):
         """analysis text"""
@@ -733,16 +717,14 @@ class MidiMessageAnalyzer_lyrics(
         idx=0,
         length=0,
         encoding="utf-8",
-        encoding_alternative="cp949",
     ):
         self.msg = msg
         self.ppqn = ppqn
         self.tempo = tempo
         self.idx_info = f"[color(244)]{idx:4}[/color(244)]"
         self.length = length
-        self._init_encoding(
-            encoding=encoding, encoding_alternative=encoding_alternative
-        )
+        self.encoded_text = self.msg.bin()[3:]
+        self.encoding = encoding
         self.lyric = self.encoded_text.decode(self.encoding).strip()
         if not self.lyric:
             self.lyric = " "
