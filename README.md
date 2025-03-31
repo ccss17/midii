@@ -38,7 +38,6 @@ pip install midii
 
         The smaller the minimum unit, the less sync error with the original, and the weaker the quantization effect. As the minimum unit becomes larger, the sync error with the original increases and the quantization effect increases.
 
-
     - `print_tracks(track_bound=None, blind_note=False, blind_time=False, blind_lyric=True, track_list=None, blind_note_info=False)`: An overriding function that improves the existing `mido.print_tracks`.
 
         By default it will print all lines of track. By setting like `track_bound=20`, You can define upper bound of lines to be printed.
@@ -57,7 +56,7 @@ pip install midii
 
 ### `quantization`
 
-- `quantization(unit="32")`:
+- `quantization(unit="32")`: The smaller the minimum unit, the less sync error with the original, and the weaker the quantization effect. As the minimum unit becomes larger, the sync error with the original increases and the quantization effect increases.
 
     ![](figure/q1.png)
 
