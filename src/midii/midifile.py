@@ -42,7 +42,7 @@ class MidiFile(mido.MidiFile):
         clip=False,
         tracks=None,
         convert_1_to_0=False,
-        lyric_encoding="utf-8",
+        lyric_encoding="latin1",
     ):
         super().__init__(
             filename=filename,

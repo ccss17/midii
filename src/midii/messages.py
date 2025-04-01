@@ -168,7 +168,7 @@ class MidiMessageAnalyzer_text(MidiMessageAnalyzer):
         tempo=DEFAULT_TEMPO,
         idx=0,
         length=0,
-        encoding="utf-8",
+        encoding="latin-1",
     ):
         super().__init__(msg, ppqn, tempo=tempo, idx=idx, length=length)
         self.encoded_text = self.msg.bin()[3:]
@@ -385,7 +385,7 @@ class MidiMessageAnalyzer_lyrics(
         tempo=DEFAULT_TEMPO,
         idx=0,
         length=0,
-        encoding="utf-8",
+        encoding="latin-1",
     ):
         self.msg = msg
         self.ppqn = ppqn
