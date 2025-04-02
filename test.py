@@ -5,6 +5,13 @@ import mido
 def test_sample():
     print(midii.sample.real)
     print(midii.sample.dataset)
+    print(midii.sample.simple)
+
+
+def test_midii_simple_print_tracks():
+    ma = midii.MidiFile(midii.sample.simple[0])
+    ma.quantization(unit="256")
+    ma.print_tracks()
 
 
 def test_midii_real_print_tracks():
@@ -46,7 +53,8 @@ def test_midii_quantization():
 
 if __name__ == "__main__":
     # test_sample()
+    test_midii_simple_print_tracks()
     # test_midii_real_print_tracks()
     # test_mido_print_tracks()
-    test_midii_print_tracks()
+    # test_midii_print_tracks()
     # test_midii_quantization()

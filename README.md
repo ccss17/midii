@@ -24,27 +24,37 @@ mid.print_tracks(
 pip install midii
 ```
 
-## API
+# API
 
-- `midii.sample`: It contains some sample midi files.
+##  `midii.sample`
 
-- `class midii.MidiFile(filename=None, file=None, type=1, ticks_per_beat=480, charset='latin1', debug=False, clip=False, tracks=None, convert_1_to_0=False, lyric_encoding='latin-1')`
+`midii.sample`: It contains some sample midi files.
 
-    The parameters of this class are no different from those of the `mido.MidiFile` class it inherits, except for `convert_1_to_0=False` and `lyric_encoding='latin-1'`. 
+- `dataset`: List object that contains some midi dataset for deep learning model. The lyric encoding of these midi files is `"cp949"` or `"utf-8"`
 
-    If you want to convert midi file type `1` to `0`, pass `convert_1_to_0=True`. 
+- `simple`: List object that contains some simple midi dataset. It is artificially created midi file for test purpose.
 
-    `lyric_encoding` specify encoding of lyric data.
+- `real`: List object that contains real-world midi examples.
 
-    - `quantization(unit="32")`: Quantize note duration. You can define least unit of quantization from `"1"`(whole note), `"2"`(half note), `"4"`(quarter note), `"8"`(eighth note), `"16"`(sixteenth note), `"32"`(thirty-second note), `"64"`(sixty-fourth note), `"128"`(hundred twenty-eighth note), `"256"`(two hundred fifty-sixth note)
+## `class midii.MidiFile`
 
-        The smaller the minimum unit, the less sync error with the original, and the weaker the quantization effect. As the minimum unit becomes larger, the sync error with the original increases and the quantization effect increases.
+`class midii.MidiFile(filename=None, file=None, type=1, ticks_per_beat=480, charset='latin1', debug=False, clip=False, tracks=None, convert_1_to_0=False, lyric_encoding='latin-1')`
 
-    - `print_tracks(track_bound=None, blind_note=False, blind_time=False, blind_lyric=True, track_list=None, blind_note_info=False)`: An overriding function that improves the existing `mido.print_tracks`.
+The parameters of this class are no different from those of the `mido.MidiFile` class it inherits, except for `convert_1_to_0=False` and `lyric_encoding='latin-1'`. 
 
-        By default it will print all lines of track. By setting like `track_bound=20`, You can define upper bound of lines to be printed.
+If you want to convert midi file type `1` to `0`, pass `convert_1_to_0=True`. 
 
-        By default it will prints all tracks. You can specify the tracks you want to output in the list `track_list`. For example, `track_list=[]`, or `track_list=["piano", "intro"]`.
+`lyric_encoding` specify encoding of lyric data.
+
+- `quantization(unit="32")`: Quantize note duration. You can define least unit of quantization from `"1"`(whole note), `"2"`(half note), `"4"`(quarter note), `"8"`(eighth note), `"16"`(sixteenth note), `"32"`(thirty-second note), `"64"`(sixty-fourth note), `"128"`(hundred twenty-eighth note), `"256"`(two hundred fifty-sixth note)
+
+    The smaller the minimum unit, the less sync error with the original, and the weaker the quantization effect. As the minimum unit becomes larger, the sync error with the original increases and the quantization effect increases.
+
+- `print_tracks(track_bound=None, blind_note=False, blind_time=False, blind_lyric=True, track_list=None, blind_note_info=False)`: An overriding function that improves the existing `mido.print_tracks`.
+
+    By default it will print all lines of track. By setting like `track_bound=20`, You can define upper bound of lines to be printed.
+
+    By default it will prints all tracks. You can specify the tracks you want to output in the list `track_list`. For example, `track_list=[]`, or `track_list=["piano", "intro"]`.
 
 ## Example
 
@@ -58,7 +68,11 @@ pip install midii
 
 ### `quantization`
 
-- `quantization(unit="32")`: The smaller the minimum unit, the less sync error with the original, and the weaker the quantization effect. As the minimum unit becomes larger, the sync error with the original increases and the quantization effect increases.
+- `quantization(unit="32")`: 
+
+    The smaller the minimum unit, the less sync error with the original, and the weaker the quantization effect. 
+    
+    As the minimum unit becomes larger, the sync error with the original increases and the quantization effect increases.
 
     ![](figure/q1.png)
 
