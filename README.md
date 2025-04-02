@@ -6,8 +6,8 @@ This package inherits `MidiFile` of [`mido`](https://github.com/mido/mido), addi
 import midii
 
 mid = midii.MidiFile(
-    midii.sample.dataset[1], # or 'song.mid'
-    convert_1_to_0=True, lyric_encoding="utf-8"
+    midii.sample.dataset[0], # or 'song.mid'
+    convert_1_to_0=True, lyric_encoding="cp949"
 )
 mid.quantization(unit="32")
 mid.print_tracks(
@@ -25,6 +25,8 @@ pip install midii
 ```
 
 ## API
+
+- `midii.sample`: It contains some sample midi files.
 
 - `class midii.MidiFile(filename=None, file=None, type=1, ticks_per_beat=480, charset='latin1', debug=False, clip=False, tracks=None, convert_1_to_0=False, lyric_encoding='latin-1')`
 
