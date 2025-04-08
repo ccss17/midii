@@ -25,7 +25,7 @@ from .config import (
     DEFAULT_TEMPO,
     DEFAULT_TIME_SIGNATURE,
 )
-from .utilities import tick2beat, beat2tick
+from .utilities import tick2beat, beat2tick, tempo2bpm
 
 
 class MidiFile(mido.MidiFile):
@@ -125,6 +125,7 @@ class MidiFile(mido.MidiFile):
         blind_time=False,
         blind_lyric=True,
         blind_note_info=False,
+        blind_times=False,
     ):
         """analysis track"""
         tempo = DEFAULT_TEMPO
@@ -138,11 +139,13 @@ class MidiFile(mido.MidiFile):
         if track_bound is None:
             track_bound = float("inf")
         lyric = ""
+        info_times = [f"TEMPO=({DEFAULT_TEMPO})"]
         total_time = 0
         for i, msg in enumerate(track):
             if i > track_bound:
                 break
             total_time += msg.time
+            info_times.append(f"{msg.time}")
             length += mido.tick2second(
                 msg.time,
                 ticks_per_beat=self.ticks_per_beat,
@@ -221,6 +224,9 @@ class MidiFile(mido.MidiFile):
                         note_num = 0
                     else:
                         tempo = prev_tempo
+                    info_times.append(
+                        f"TEMPO=({tempo2bpm(tempo, time_signature)})"
+                    )
                 case "end_of_track":
                     if self.convert_1_to_0:
                         self.print_note_num(note_num, tempo, time_signature)
@@ -259,6 +265,8 @@ class MidiFile(mido.MidiFile):
         rprint("bpm(tempo): " + f"{bpm}({tempo})")
         if not blind_lyric:
             print(f'LYRIC: "{lyric}"')
+        if not blind_times:
+            print(f"TIMES: {' '.join(info_times)}")
 
     def _str_panel(self):
         # meta information of midi file
@@ -285,7 +293,7 @@ class MidiFile(mido.MidiFile):
         blind_time=False,
         blind_lyric=True,
         track_list=None,
-        blind_note_info=False,
+        blind_note_info=True,
     ):
         """method to analysis"""
 

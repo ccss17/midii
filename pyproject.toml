@@ -1,6 +1,6 @@
 [project]
 name = "midii"
-version = "0.1.8"
+version = "0.1.9"
 description = "Midi Insights: midi analyzer"
 readme = "README.md"
 authors = [
