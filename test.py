@@ -63,7 +63,7 @@ def test_midii_print_times():
     ma = midii.MidiFile(
         midii.sample.dataset[0], convert_1_to_0=True, lyric_encoding="cp949"
     )
-    ma.print_tracks(blind_time=False)
+    ma.print_tracks()
 
 
 if __name__ == "__main__":

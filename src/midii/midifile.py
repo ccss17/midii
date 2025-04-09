@@ -117,7 +117,7 @@ class MidiFile(mido.MidiFile):
         info = f"[bold {color}]Total item num of BPM({bpm}): " + f"{note_num}"
         Console().rule(info, style=f"{color}")
 
-    def _analysis(
+    def _print_tracks(
         self,
         track,
         track_bound=None,
@@ -125,7 +125,7 @@ class MidiFile(mido.MidiFile):
         blind_time=False,
         blind_lyric=True,
         blind_note_info=False,
-        blind_times=False,
+        blind_times=True,
     ):
         """analysis track"""
         tempo = DEFAULT_TEMPO
@@ -268,7 +268,7 @@ class MidiFile(mido.MidiFile):
         if not blind_times:
             print(f"TIMES: {' '.join(info_times)}")
 
-    def _str_panel(self):
+    def _panel(self):
         # meta information of midi file
         header_style = "black on white blink"
         header_info = "\n".join(
@@ -291,6 +291,7 @@ class MidiFile(mido.MidiFile):
         track_bound=None,
         blind_note=False,
         blind_time=False,
+        blind_times=True,
         blind_lyric=True,
         track_list=None,
         blind_note_info=True,
@@ -299,7 +300,7 @@ class MidiFile(mido.MidiFile):
 
         if track_bound is None:
             track_bound = float("inf")
-        rprint(self._str_panel())
+        rprint(self._panel())
 
         _style_track_line = "#ffffff on #4707a8"
         for i, track in enumerate(self.tracks):
@@ -309,11 +310,12 @@ class MidiFile(mido.MidiFile):
                 style=f"{_style_track_line}",
             )
             if track_list is None or track.name in track_list:
-                self._analysis(
+                self._print_tracks(
                     track,
                     track_bound=track_bound,
                     blind_note=blind_note,
                     blind_time=blind_time,
                     blind_lyric=blind_lyric,
                     blind_note_info=blind_note_info,
+                    blind_times=blind_times,
                 )
