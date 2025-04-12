@@ -18,19 +18,19 @@ from .config import (
 from .utilities import tick2beat, note_number_to_name, tempo2bpm
 
 
-class MidiMessageAnalyzer:
-    """MidiMessageAnalyzer"""
+class MessageAnalyzer:
+    """MessageAnalyzer"""
 
     def __init__(
         self,
         msg,
-        ppqn=DEFAULT_TICKS_PER_BEAT,
+        ticks_per_beat=DEFAULT_TICKS_PER_BEAT,
         tempo=DEFAULT_TEMPO,
         idx=0,
         length=0,
     ):
         self.msg = msg
-        self.ppqn = ppqn
+        self.ticks_per_beat = ticks_per_beat
         self.tempo = tempo
         self.idx_info = f"[color(244)]{idx:4}[/color(244)]"
         self.length = length
@@ -41,26 +41,25 @@ class MidiMessageAnalyzer:
 
     def info_time(self):
         """time_info"""
-        if self.msg.time:
-            main_color = "#ffffff"
-            sub_color = "white"
-            time = mido.tick2second(
-                self.msg.time,
-                ticks_per_beat=self.ppqn,
-                tempo=self.tempo,
-            )
-            return " ".join(
-                [
-                    f"[{main_color}]{time:4.2f}[/{main_color}]"
-                    + f"[{sub_color}]/{self.length:6.2f}[/{sub_color}]",
-                    f"[{sub_color}]time=[/{sub_color}]"
-                    + f"[{main_color}]{self.msg.time:<3}[/{main_color}]",
-                ]
-            )
-        else:
+        if not self.msg.time:
             return ""
+        style_main = "bold"
+        style_sub = "white"
+        time = mido.tick2second(
+            self.msg.time,
+            ticks_per_beat=self.ticks_per_beat,
+            tempo=self.tempo,
+        )
+        return " ".join(
+            [
+                f"[{style_main}]{time:4.2f}[/{style_main}]"
+                + f"[{style_sub}]/{self.length:6.2f}[/{style_sub}]",
+                f"[{style_sub}]time=[/{style_sub}]"
+                + f"[{style_main}]{self.msg.time:<3}[/{style_main}]",
+            ]
+        )
 
-    def result(self, head="", body="", blind_time=False):
+    def printable(self, head="", body="", blind_time=False):
         """print strings"""
         time_info = "" if blind_time else self.info_time()
         _result = [self.idx_info, head, time_info, body]
@@ -68,31 +67,41 @@ class MidiMessageAnalyzer:
 
     def analysis(self, blind_time=False):
         """analysis"""
-        return self.result(
+        return self.printable(
+            head=self.info_type(),
+            body=f"[color(250)]{self.msg}[/color(250)]",
+            blind_time=blind_time,
+        )
+
+    def __repr__(self, blind_time=False):
+        """analysis"""
+        return self.printable(
             head=self.info_type(),
             body=f"[color(250)]{self.msg}[/color(250)]",
             blind_time=blind_time,
         )
 
 
-class MidiMessageAnalyzer_set_tempo(MidiMessageAnalyzer):
-    """MidiMessageAnalyzer_set_tempo"""
+class MessageAnalyzer_set_tempo(MessageAnalyzer):
+    """MessageAnalyzer_set_tempo"""
 
     def __init__(
         self,
         msg,
-        ppqn=DEFAULT_TICKS_PER_BEAT,
+        ticks_per_beat=DEFAULT_TICKS_PER_BEAT,
         tempo=DEFAULT_TEMPO,
         idx=0,
         length=0,
         time_signature=DEFAULT_TIME_SIGNATURE,
     ):
-        super().__init__(msg, ppqn, tempo=tempo, idx=idx, length=length)
+        super().__init__(
+            msg, ticks_per_beat, tempo=tempo, idx=idx, length=length
+        )
         self.time_signature = time_signature
 
     def analysis(self, blind_time=False):
         bpm = tempo2bpm(self.msg.tempo, time_signature=self.time_signature)
-        result = self.result(
+        result = self.printable(
             head=self.info_type(),
             body=f"[white]BPM=[/white][color(190)]{bpm}({self.msg.tempo})[/color(190)]",
             blind_time=blind_time,
@@ -100,27 +109,27 @@ class MidiMessageAnalyzer_set_tempo(MidiMessageAnalyzer):
         return result, self.msg.tempo
 
 
-class MidiMessageAnalyzer_key_signature(MidiMessageAnalyzer):
-    """MidiMessageAnalyzer_key_signature"""
+class MessageAnalyzer_key_signature(MessageAnalyzer):
+    """MessageAnalyzer_key_signature"""
 
     def analysis(self, blind_time=False):
-        return self.result(
+        return self.printable(
             head=self.info_type(), body=self.msg.key, blind_time=blind_time
         )
 
 
-class MidiMessageAnalyzer_end_of_track(MidiMessageAnalyzer):
-    """MidiMessageAnalyzer_end_of_track"""
+class MessageAnalyzer_end_of_track(MessageAnalyzer):
+    """MessageAnalyzer_end_of_track"""
 
     def analysis(self, blind_time=False):
-        return self.result(head=self.info_type(), blind_time=blind_time)
+        return self.printable(head=self.info_type(), blind_time=blind_time)
 
 
-class MidiMessageAnalyzer_time_signature(MidiMessageAnalyzer):
-    """MidiMessageAnalyzer_time_signature"""
+class MessageAnalyzer_time_signature(MessageAnalyzer):
+    """MessageAnalyzer_time_signature"""
 
     def analysis(self, blind_time=False):
-        result = self.result(
+        result = self.printable(
             head=self.info_type(),
             body=f"{self.msg.numerator}/{self.msg.denominator}",
             blind_time=blind_time,
@@ -128,8 +137,8 @@ class MidiMessageAnalyzer_time_signature(MidiMessageAnalyzer):
         return result, (self.msg.numerator, self.msg.denominator)
 
 
-class MidiMessageAnalyzer_measure(MidiMessageAnalyzer):
-    """MidiMessageAnalyzer_measure"""
+class MessageAnalyzer_measure(MessageAnalyzer):
+    """MessageAnalyzer_measure"""
 
     idx = 1
 
@@ -156,37 +165,39 @@ class MidiMessageAnalyzer_measure(MidiMessageAnalyzer):
         return ""
 
 
-class MidiMessageAnalyzer_text(MidiMessageAnalyzer):
-    """MidiMessageAnalyzer_text"""
+class MessageAnalyzer_text(MessageAnalyzer):
+    """MessageAnalyzer_text"""
 
     def __init__(
         self,
         msg,
-        ppqn=DEFAULT_TICKS_PER_BEAT,
+        ticks_per_beat=DEFAULT_TICKS_PER_BEAT,
         tempo=DEFAULT_TEMPO,
         idx=0,
         length=0,
         encoding="latin-1",
     ):
-        super().__init__(msg, ppqn, tempo=tempo, idx=idx, length=length)
+        super().__init__(
+            msg, ticks_per_beat, tempo=tempo, idx=idx, length=length
+        )
         self.encoded_text = self.msg.bin()[3:]
         self.encoding = encoding
 
     def analysis(self, blind_time=False):
         """analysis text"""
         text = self.encoded_text.decode(self.encoding).strip()
-        return self.result(
+        return self.printable(
             head=self.info_type(), body=text, blind_time=blind_time
         )
 
 
-class MidiMessageAnalyzer_SoundUnit(MidiMessageAnalyzer):
-    """MidiMessageAnalyzer_SoundUnit"""
+class MessageAnalyzer_SoundUnit(MessageAnalyzer):
+    """MessageAnalyzer_SoundUnit"""
 
     def __init__(
         self,
         msg,
-        ppqn=DEFAULT_TICKS_PER_BEAT,
+        ticks_per_beat=DEFAULT_TICKS_PER_BEAT,
         tempo=DEFAULT_TEMPO,
         idx=0,
         length=0,
@@ -194,7 +205,7 @@ class MidiMessageAnalyzer_SoundUnit(MidiMessageAnalyzer):
     ):
         super().__init__(
             msg,
-            ppqn,
+            ticks_per_beat,
             tempo=tempo,
             idx=idx,
             length=length,
@@ -225,7 +236,7 @@ class MidiMessageAnalyzer_SoundUnit(MidiMessageAnalyzer):
         """select minimum error"""
         if tick == 0:
             return None, None
-        beat = tick2beat(tick, self.ppqn)
+        beat = tick2beat(tick, self.ticks_per_beat)
         min_error = float("inf")
         quantized_note = None
         note_enum = Rest_all if as_rest else Note_all
@@ -263,8 +274,8 @@ class MidiMessageAnalyzer_SoundUnit(MidiMessageAnalyzer):
         return f"{note_number_to_name(note):>3}({note:2})"
 
 
-class MidiMessageAnalyzer_note_on(MidiMessageAnalyzer_SoundUnit):
-    """MidiMessageAnalyzer_note_on"""
+class MessageAnalyzer_note_on(MessageAnalyzer_SoundUnit):
+    """MessageAnalyzer_note_on"""
 
     def alloc_note(self, note):
         """alloc_note"""
@@ -281,21 +292,21 @@ class MidiMessageAnalyzer_note_on(MidiMessageAnalyzer_SoundUnit):
         if error is not None and not blind_note_info:
             info_quantization = self.quantization_info(
                 round(error, 3),
-                tick2beat(self.msg.time, self.ppqn),
+                tick2beat(self.msg.time, self.ticks_per_beat),
                 quantized_note,
             )
         color = f"color({COLOR[addr % len(COLOR)]})"
         note_msg = f"[{color}]┌{self.note_info(self.msg.note)}┐[/{color}]"
         result = ""
         if not blind_note:
-            result = self.result(
+            result = self.printable(
                 head=note_msg, body=info_quantization, blind_time=blind_time
             )
         return result, addr
 
 
-class MidiMessageAnalyzer_note_off(MidiMessageAnalyzer_SoundUnit):
-    """MidiMessageAnalyzer_note_off"""
+class MessageAnalyzer_note_off(MessageAnalyzer_SoundUnit):
+    """MessageAnalyzer_note_off"""
 
     def free_note(self, note):
         """alloc_note"""
@@ -326,12 +337,12 @@ class MidiMessageAnalyzer_note_off(MidiMessageAnalyzer_SoundUnit):
         if error is not None and not blind_note_info:
             info_quantization = self.quantization_info(
                 round(error, 3),
-                tick2beat(self.msg.time, self.ppqn),
+                tick2beat(self.msg.time, self.ticks_per_beat),
                 quantized_note,
             )
         result = ""
         if not blind_note:
-            result = self.result(
+            result = self.printable(
                 head=info_note_off,
                 body=info_quantization,
                 blind_time=blind_time,
@@ -340,8 +351,8 @@ class MidiMessageAnalyzer_note_off(MidiMessageAnalyzer_SoundUnit):
         return result
 
 
-class MidiMessageAnalyzer_rest(MidiMessageAnalyzer_SoundUnit):
-    """MidiMessageAnalyzer_rest"""
+class MessageAnalyzer_rest(MessageAnalyzer_SoundUnit):
+    """MessageAnalyzer_rest"""
 
     def analysis(
         self,
@@ -354,7 +365,7 @@ class MidiMessageAnalyzer_rest(MidiMessageAnalyzer_SoundUnit):
         if error is not None and not blind_note_info:
             info_quantization = self.quantization_info(
                 round(error, 3),
-                tick2beat(self.msg.time, self.ppqn),
+                tick2beat(self.msg.time, self.ticks_per_beat),
                 quantized_note,
             )
         result = ""
@@ -362,7 +373,7 @@ class MidiMessageAnalyzer_rest(MidiMessageAnalyzer_SoundUnit):
         info_rest = f"{info_rest:^19}"
         info_rest = f"[#ffffff]{quantized_note.symbol:^9}[/#ffffff]"
         if not blind_note:
-            result = self.result(
+            result = self.printable(
                 head=info_rest,
                 body=info_quantization,
                 blind_time=blind_time,
@@ -371,22 +382,20 @@ class MidiMessageAnalyzer_rest(MidiMessageAnalyzer_SoundUnit):
         return result
 
 
-class MidiMessageAnalyzer_lyrics(
-    MidiMessageAnalyzer_SoundUnit, MidiMessageAnalyzer_text
-):
-    """MidiMessageAnalyzer_lyrics"""
+class MessageAnalyzer_lyrics(MessageAnalyzer_SoundUnit, MessageAnalyzer_text):
+    """MessageAnalyzer_lyrics"""
 
     def __init__(
         self,
         msg,
-        ppqn=DEFAULT_TICKS_PER_BEAT,
+        ticks_per_beat=DEFAULT_TICKS_PER_BEAT,
         tempo=DEFAULT_TEMPO,
         idx=0,
         length=0,
         encoding="latin-1",
     ):
         self.msg = msg
-        self.ppqn = ppqn
+        self.ticks_per_beat = ticks_per_beat
         self.tempo = tempo
         self.idx_info = f"[color(244)]{idx:4}[/color(244)]"
         self.length = length
@@ -431,7 +440,7 @@ class MidiMessageAnalyzer_lyrics(
         if error is not None and not blind_note_info:
             info_quantization = self.quantization_info(
                 round(error, 3),
-                tick2beat(self.msg.time, self.ppqn),
+                tick2beat(self.msg.time, self.ticks_per_beat),
                 quantized_note,
             )
         head = (
@@ -443,7 +452,7 @@ class MidiMessageAnalyzer_lyrics(
         )
         result = ""
         if not blind_note:
-            result = self.result(
+            result = self.printable(
                 head=head,
                 body=info_quantization,
                 blind_time=blind_time,

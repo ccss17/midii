@@ -8,17 +8,17 @@ from rich.panel import Panel
 
 from .note import Note
 from .messages import (
-    MidiMessageAnalyzer_measure,
-    MidiMessageAnalyzer_text,
-    MidiMessageAnalyzer_set_tempo,
-    MidiMessageAnalyzer_end_of_track,
-    MidiMessageAnalyzer_key_signature,
-    MidiMessageAnalyzer_time_signature,
-    MidiMessageAnalyzer,
-    MidiMessageAnalyzer_note_on,
-    MidiMessageAnalyzer_note_off,
-    MidiMessageAnalyzer_rest,
-    MidiMessageAnalyzer_lyrics,
+    MessageAnalyzer_measure,
+    MessageAnalyzer_text,
+    MessageAnalyzer_set_tempo,
+    MessageAnalyzer_end_of_track,
+    MessageAnalyzer_key_signature,
+    MessageAnalyzer_time_signature,
+    MessageAnalyzer,
+    MessageAnalyzer_note_on,
+    MessageAnalyzer_note_off,
+    MessageAnalyzer_rest,
+    MessageAnalyzer_lyrics,
 )
 from .config import (
     DEFAULT_TICKS_PER_BEAT,
@@ -153,14 +153,14 @@ class MidiFile(mido.MidiFile):
             )
             msg_kwarg = {
                 "msg": msg,
-                "ppqn": self.ticks_per_beat,
+                "ticks_per_beat": self.ticks_per_beat,
                 "tempo": tempo,
                 "idx": i,
                 "length": length,
             }
             match msg.type:
                 case "note_on":
-                    result, note_address = MidiMessageAnalyzer_note_on(
+                    result, note_address = MessageAnalyzer_note_on(
                         **msg_kwarg, note_queue=note_queue
                     ).analysis(
                         blind_time=blind_time,
@@ -168,7 +168,7 @@ class MidiFile(mido.MidiFile):
                         blind_note_info=blind_note_info,
                     )
                 case "note_off":
-                    result = MidiMessageAnalyzer_note_off(
+                    result = MessageAnalyzer_note_off(
                         **msg_kwarg, note_queue=note_queue
                     ).analysis(
                         blind_time=blind_time,
@@ -176,7 +176,7 @@ class MidiFile(mido.MidiFile):
                         blind_note_info=blind_note_info,
                     )
                 case "rest":
-                    result = MidiMessageAnalyzer_rest(
+                    result = MessageAnalyzer_rest(
                         **msg_kwarg, note_queue=note_queue
                     ).analysis(
                         blind_time=blind_time,
@@ -184,7 +184,7 @@ class MidiFile(mido.MidiFile):
                         blind_note_info=blind_note_info,
                     )
                 case "lyrics":
-                    mmal = MidiMessageAnalyzer_lyrics(
+                    mmal = MessageAnalyzer_lyrics(
                         **msg_kwarg,
                         encoding=self.lyric_encoding,
                     )
@@ -198,11 +198,9 @@ class MidiFile(mido.MidiFile):
                     )
                     lyric += _lyric
                 case "measure":
-                    result = MidiMessageAnalyzer_measure(
-                        time_signature
-                    ).analysis()
+                    result = MessageAnalyzer_measure(time_signature).analysis()
                 case "text" | "track_name":
-                    mmat = MidiMessageAnalyzer_text(
+                    mmat = MessageAnalyzer_text(
                         **msg_kwarg,
                         encoding=self.lyric_encoding,
                     )
@@ -213,7 +211,7 @@ class MidiFile(mido.MidiFile):
                     if not first_tempo and self.convert_1_to_0:
                         self.print_note_num(note_num, tempo, time_signature)
                     first_tempo = False
-                    result, tempo = MidiMessageAnalyzer_set_tempo(
+                    result, tempo = MessageAnalyzer_set_tempo(
                         **msg_kwarg,
                         time_signature=time_signature,
                     ).analysis(blind_time=blind_time)
@@ -230,21 +228,19 @@ class MidiFile(mido.MidiFile):
                 case "end_of_track":
                     if self.convert_1_to_0:
                         self.print_note_num(note_num, tempo, time_signature)
-                    result = MidiMessageAnalyzer_end_of_track(
+                    result = MessageAnalyzer_end_of_track(
                         **msg_kwarg
                     ).analysis(blind_time=blind_time)
                 case "key_signature":
-                    result = MidiMessageAnalyzer_key_signature(
+                    result = MessageAnalyzer_key_signature(
                         **msg_kwarg
                     ).analysis(blind_time=blind_time)
                 case "time_signature":
-                    result, time_signature = (
-                        MidiMessageAnalyzer_time_signature(
-                            **msg_kwarg
-                        ).analysis(blind_time=blind_time)
-                    )
+                    result, time_signature = MessageAnalyzer_time_signature(
+                        **msg_kwarg
+                    ).analysis(blind_time=blind_time)
                 case _:
-                    result = MidiMessageAnalyzer(**msg_kwarg).analysis(
+                    result = MessageAnalyzer(**msg_kwarg).analysis(
                         blind_time=blind_time
                     )
 
