@@ -43,9 +43,10 @@ def test_midii_quantization():
 
 def test_version():
     from importlib.metadata import version
+    import platform
 
+    print("Python Version (concise):", platform.python_version())
     print("mido version:", version("mido"))
-    print("numpy version:", version("numpy"))
     print("rich version:", version("rich"))
 
 
@@ -57,11 +58,11 @@ def test_midii_print_times():
 
 
 if __name__ == "__main__":
-    # test_sample()
+    test_sample()
     test_midii_simple_print_tracks()
-    # test_midii_real_print_tracks()
-    # test_mido_dataset_print_tracks()
-    # test_midii_print_tracks()
-    # test_midii_quantization()
-    # test_version()
-    # test_midii_print_times()
+    test_midii_real_print_tracks()
+    test_mido_dataset_print_tracks()
+    test_midii_print_tracks()
+    test_midii_quantization()
+    test_midii_print_times()
+    test_version()

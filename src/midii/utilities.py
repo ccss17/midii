@@ -1,6 +1,5 @@
 """utilities"""
 
-import numpy as np
 import mido
 
 from .config import DEFAULT_TIME_SIGNATURE
@@ -43,7 +42,7 @@ def note_number_to_name(note_number):
     semis = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 
     # Ensure the note is an int
-    note_number = int(np.round(note_number))
+    note_number = int(round(note_number))
 
     # Get the semitone and the octave, and concatenate to create the name
     return semis[note_number % 12] + str(note_number // 12 - 1)
