@@ -1,5 +1,7 @@
-import mido
+import json
+from pathlib import Path
 
+import mido
 from rich import print as rprint
 from rich.console import Console
 from rich.panel import Panel
@@ -121,7 +123,7 @@ class MidiFile(mido.MidiFile):
     ):
         tempo = DEFAULT_TEMPO
         time_signature = DEFAULT_TIME_SIGNATURE
-        length = 0
+        current_time = 0
         note_address = 0
         note_num = 0
         first_tempo = True
@@ -137,7 +139,7 @@ class MidiFile(mido.MidiFile):
                 break
             total_time += msg.time
             _str_times.append(f"{msg.time}")
-            length += mido.tick2second(
+            current_time += mido.tick2second(
                 msg.time,
                 ticks_per_beat=self.ticks_per_beat,
                 tempo=tempo,
@@ -146,8 +148,8 @@ class MidiFile(mido.MidiFile):
                 "msg": msg,
                 "ticks_per_beat": self.ticks_per_beat,
                 "tempo": tempo,
-                "idx": i,
-                "length": length,
+                "index": i,
+                "current_time": current_time,
                 "print_time": print_time,
             }
             if msg.type == "note_on":
@@ -218,12 +220,12 @@ class MidiFile(mido.MidiFile):
                 note_num += 1
 
         rprint(f"Track lyric encode: {self.lyric_encoding}")
-        length = mido.tick2second(
+        current_time = mido.tick2second(
             total_time,
             ticks_per_beat=self.ticks_per_beat,
             tempo=tempo,
         )
-        rprint("Track total secs/time: " + f"{self.length}/{total_time}")
+        rprint("Track total secs/time: " + f"{current_time}/{total_time}")
         if print_lyric:
             print(f'LYRIC: "{lyric}"')
         if print_times:
@@ -278,3 +280,65 @@ class MidiFile(mido.MidiFile):
                     print_note_info=print_note_info,
                     print_times=print_times,
                 )
+
+    def to_json(
+        self,
+        time_format="ticks",  # "seconds", "ticks"
+    ):
+        if self.type == 1 and not self.convert_1_to_0:
+            raise RuntimeError
+        tempo = DEFAULT_TEMPO
+        time_current = 0
+        lyric = ""
+        result = []
+        note_data = {
+            "start": None,
+            "end": None,
+            "duration": None,
+            "pitch": None,
+            "lyric": None,
+        }
+        duration = 0
+        for msg in self.tracks[0]:
+            duration += msg.time
+            time_current += msg.time
+            if msg.type == "note_on":
+                time_note_on = time_current
+                duration = 0
+            elif msg.type == "note_off":
+                _note_data = note_data.copy()
+                if time_format == "ticks":
+                    _note_data["start"] = time_note_on
+                    _note_data["end"] = time_current
+                    _note_data["duration"] = duration
+                elif time_format == "seconds":
+                    _note_data["start"] = mido.tick2second(
+                        time_note_on,
+                        ticks_per_beat=self.ticks_per_beat,
+                        tempo=tempo,
+                    )
+                    _note_data["end"] = mido.tick2second(
+                        time_current,
+                        ticks_per_beat=self.ticks_per_beat,
+                        tempo=tempo,
+                    )
+                    _note_data["duration"] = mido.tick2second(
+                        duration,
+                        ticks_per_beat=self.ticks_per_beat,
+                        tempo=tempo,
+                    )
+                else:
+                    raise ValueError
+                _note_data["pitch"] = msg.note
+                _note_data["lyric"] = lyric
+                result.append(_note_data)
+                lyric = ""
+            elif msg.type == "lyrics":
+                lyric += MessageAnalyzer_lyrics(
+                    msg=msg,
+                    encoding=self.lyric_encoding,
+                ).lyric
+            elif msg.type == "set_tempo":
+                tempo = msg.tempo
+
+        return result

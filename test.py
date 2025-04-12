@@ -1,5 +1,6 @@
 import midii
 import mido
+from rich import print as rprint
 
 
 def test_sample():
@@ -57,12 +58,22 @@ def test_midii_print_times():
     ma.print_tracks()
 
 
+def test_to_json():
+    ma = midii.MidiFile(
+        midii.sample.dataset[0], convert_1_to_0=True, lyric_encoding="cp949"
+    )
+    rprint(ma.to_json())
+    ma.quantize()
+    rprint(ma.to_json())
+
+
 if __name__ == "__main__":
-    test_sample()
-    test_midii_simple_print_tracks()
-    test_midii_real_print_tracks()
-    test_mido_dataset_print_tracks()
-    test_midii_print_tracks()
-    test_midii_quantize()
-    test_midii_print_times()
-    test_version()
+    # test_sample()
+    # test_midii_simple_print_tracks()
+    # test_midii_real_print_tracks()
+    # test_mido_dataset_print_tracks()
+    # test_midii_print_tracks()
+    # test_midii_quantize()
+    # test_midii_print_times()
+    # test_version()
+    test_to_json()

@@ -21,15 +21,15 @@ class MessageAnalyzer:
         msg,
         ticks_per_beat=DEFAULT_TICKS_PER_BEAT,
         tempo=DEFAULT_TEMPO,
-        idx=0,
-        length=0,
+        index=0,
+        current_time=0,
         print_time=True,
     ):
         self.msg = msg
         self.ticks_per_beat = ticks_per_beat
         self.tempo = tempo
-        self.idx_info = f"[color(244)]{idx:4}[/color(244)]"
-        self.length = length
+        self.index = index
+        self.current_time = current_time
         self.print_time = print_time
 
     def str_type(self):
@@ -48,16 +48,16 @@ class MessageAnalyzer:
         return " ".join(
             [
                 f"[{style_main}]{time:4.2f}[/{style_main}]"
-                + f"[{style_sub}]/{self.length:6.2f}[/{style_sub}]",
+                + f"[{style_sub}]/{self.current_time:6.2f}[/{style_sub}]",
                 f"[{style_sub}]time=[/{style_sub}]"
                 + f"[{style_main}]{self.msg.time:<3}[/{style_main}]",
             ]
         )
 
     def str_format(self, head="", body=""):
-        time_info = "" if not self.print_time else self.str_time()
-        _result = [self.idx_info, head, time_info, body]
-        return " ".join([s for s in _result if s])
+        _str_time = "" if not self.print_time else self.str_time()
+        _str_idx = f"[color(244)]{self.index:4}[/color(244)]"
+        return " ".join([s for s in [_str_idx, head, _str_time, body] if s])
 
     def __str__(self):
         return self.str_format(
@@ -72,8 +72,8 @@ class MessageAnalyzer_set_tempo(MessageAnalyzer):
         msg,
         ticks_per_beat=DEFAULT_TICKS_PER_BEAT,
         tempo=DEFAULT_TEMPO,
-        idx=0,
-        length=0,
+        index=0,
+        current_time=0,
         print_time=True,
         time_signature=DEFAULT_TIME_SIGNATURE,
     ):
@@ -81,8 +81,8 @@ class MessageAnalyzer_set_tempo(MessageAnalyzer):
             msg,
             ticks_per_beat,
             tempo=tempo,
-            idx=idx,
-            length=length,
+            index=index,
+            current_time=current_time,
             print_time=print_time,
         )
         self.time_signature = time_signature
@@ -120,8 +120,8 @@ class MessageAnalyzer_text(MessageAnalyzer):
         msg,
         ticks_per_beat=DEFAULT_TICKS_PER_BEAT,
         tempo=DEFAULT_TEMPO,
-        idx=0,
-        length=0,
+        index=0,
+        current_time=0,
         print_time=True,
         encoding="latin-1",
     ):
@@ -129,8 +129,8 @@ class MessageAnalyzer_text(MessageAnalyzer):
             msg,
             ticks_per_beat,
             tempo=tempo,
-            idx=idx,
-            length=length,
+            index=index,
+            current_time=current_time,
             print_time=print_time,
         )
         self.text = self.decode(encoding=encoding)
@@ -148,8 +148,8 @@ class MessageAnalyzer_SoundUnit(MessageAnalyzer):
         msg,
         ticks_per_beat=DEFAULT_TICKS_PER_BEAT,
         tempo=DEFAULT_TEMPO,
-        idx=0,
-        length=0,
+        index=0,
+        current_time=0,
         print_time=True,
         print_note=True,
         print_note_info=False,
@@ -159,8 +159,8 @@ class MessageAnalyzer_SoundUnit(MessageAnalyzer):
             msg,
             ticks_per_beat,
             tempo=tempo,
-            idx=idx,
-            length=length,
+            index=index,
+            current_time=current_time,
             print_time=print_time,
         )
         if note_queue is None:
@@ -229,8 +229,8 @@ class MessageAnalyzer_note_on(MessageAnalyzer_SoundUnit):
         msg,
         ticks_per_beat=DEFAULT_TICKS_PER_BEAT,
         tempo=DEFAULT_TEMPO,
-        idx=0,
-        length=0,
+        index=0,
+        current_time=0,
         print_time=True,
         print_note=True,
         print_note_info=False,
@@ -240,8 +240,8 @@ class MessageAnalyzer_note_on(MessageAnalyzer_SoundUnit):
             msg,
             ticks_per_beat,
             tempo=tempo,
-            idx=idx,
-            length=length,
+            index=index,
+            current_time=current_time,
             print_time=print_time,
             print_note=print_note,
             print_note_info=print_note_info,
@@ -277,8 +277,8 @@ class MessageAnalyzer_note_off(MessageAnalyzer_SoundUnit):
         msg,
         ticks_per_beat=DEFAULT_TICKS_PER_BEAT,
         tempo=DEFAULT_TEMPO,
-        idx=0,
-        length=0,
+        index=0,
+        current_time=0,
         print_time=True,
         print_note=True,
         print_note_info=False,
@@ -288,8 +288,8 @@ class MessageAnalyzer_note_off(MessageAnalyzer_SoundUnit):
             msg,
             ticks_per_beat,
             tempo=tempo,
-            idx=idx,
-            length=length,
+            index=index,
+            current_time=current_time,
             print_time=print_time,
             print_note=print_note,
             print_note_info=print_note_info,
@@ -340,8 +340,8 @@ class MessageAnalyzer_lyrics(MessageAnalyzer_SoundUnit, MessageAnalyzer_text):
         msg,
         ticks_per_beat=DEFAULT_TICKS_PER_BEAT,
         tempo=DEFAULT_TEMPO,
-        idx=0,
-        length=0,
+        index=0,
+        current_time=0,
         print_time=True,
         print_note=True,
         print_note_info=False,
@@ -351,8 +351,8 @@ class MessageAnalyzer_lyrics(MessageAnalyzer_SoundUnit, MessageAnalyzer_text):
         self.msg = msg
         self.ticks_per_beat = ticks_per_beat
         self.tempo = tempo
-        self.idx_info = f"[color(244)]{idx:4}[/color(244)]"
-        self.length = length
+        self.index = index
+        self.current_time = current_time
         self.print_time = print_time
         self.print_note = print_note
         self.print_note_info = print_note_info
