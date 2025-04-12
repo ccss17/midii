@@ -17,7 +17,7 @@ def test_midii_simple_print_tracks():
 def test_midii_real_print_tracks():
     ma = midii.MidiFile(midii.sample.real[1])
     ma.quantization(unit="256")
-    ma.print_tracks(blind_note_info=True, track_list=["piano-r"])
+    ma.print_tracks(print_note_info=True, track_list=["piano-r"])
 
 
 def test_mido_dataset_print_tracks():
@@ -30,12 +30,7 @@ def test_midii_print_tracks():
         midii.sample.dataset[1], convert_1_to_0=True, lyric_encoding="cp949"
     )
     # ma.quantization(unit="32")
-    ma.print_tracks(
-        track_bound=None,
-        track_list=None,
-        blind_note_info=True,
-        blind_lyric=True,
-    )
+    ma.print_tracks()
 
 
 def test_midii_quantization():
@@ -43,12 +38,7 @@ def test_midii_quantization():
         midii.sample.dataset[1], convert_1_to_0=True, lyric_encoding="cp949"
     )
     ma.quantization(unit="32")
-    ma.print_tracks(
-        track_bound=None,
-        track_list=None,
-        blind_note_info=True,
-        blind_lyric=True,
-    )
+    ma.print_tracks()
 
 
 def test_version():
@@ -68,10 +58,10 @@ def test_midii_print_times():
 
 if __name__ == "__main__":
     # test_sample()
-    # test_midii_simple_print_tracks()
+    test_midii_simple_print_tracks()
     # test_midii_real_print_tracks()
     # test_mido_dataset_print_tracks()
     # test_midii_print_tracks()
     # test_midii_quantization()
     # test_version()
-    test_midii_print_times()
+    # test_midii_print_times()

@@ -11,10 +11,10 @@ mid = midii.MidiFile(
 )
 mid.quantization(unit="32")
 mid.print_tracks(
-    track_bound=None,
+    track_limit=None,
     track_list=None,
-    blind_note_info=True,
-    blind_lyric=True,
+    print_note_info=True,
+    print_lyric=False,
 )
 ```
 
@@ -50,9 +50,9 @@ If you want to convert midi file type `1` to `0`, pass `convert_1_to_0=True`.
 
     The smaller the minimum unit, the less sync error with the original, and the weaker the quantization effect. As the minimum unit becomes larger, the sync error with the original increases and the quantization effect increases.
 
-- `print_tracks(track_bound=None, blind_note=False, blind_time=False, blind_lyric=True, track_list=None, blind_note_info=False)`: An overriding function that improves the existing `mido.print_tracks`.
+- `print_tracks(track_limit=None, print_note=True, print_time=True, print_lyric=False, track_list=None, print_note_info=False)`: An overriding function that improves the existing `mido.print_tracks`.
 
-    By default it will print all lines of track. By setting like `track_bound=20`, You can define upper bound of lines to be printed.
+    By default it will print all lines of track. By setting like `track_limit=20`, You can define upper bound of lines to be printed.
 
     By default it will prints all tracks. You can specify the tracks you want to output in the list `track_list`. For example, `track_list=[]`, or `track_list=["piano", "intro"]`.
 

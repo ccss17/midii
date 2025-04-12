@@ -118,12 +118,12 @@ class MidiFile(mido.MidiFile):
     def _print_tracks(
         self,
         track,
-        track_bound=None,
-        blind_note=False,
-        blind_time=False,
-        blind_lyric=True,
-        blind_note_info=False,
-        blind_times=True,
+        track_limit=None,
+        print_note=True,
+        print_time=True,
+        print_note_info=False,
+        print_times=False,
+        print_lyric=False,
     ):
         """analysis track"""
         tempo = DEFAULT_TEMPO
@@ -134,13 +134,13 @@ class MidiFile(mido.MidiFile):
         first_tempo = True
         prev_tempo = None
         note_queue = {}
-        if track_bound is None:
-            track_bound = float("inf")
+        if track_limit is None:
+            track_limit = float("inf")
         lyric = ""
         _str_times = [f"TEMPO=({DEFAULT_TEMPO})"]
         total_time = 0
         for i, msg in enumerate(track):
-            if i > track_bound:
+            if i > track_limit:
                 break
             total_time += msg.time
             _str_times.append(f"{msg.time}")
@@ -155,28 +155,28 @@ class MidiFile(mido.MidiFile):
                 "tempo": tempo,
                 "idx": i,
                 "length": length,
-                "blind_time": blind_time,
+                "print_time": print_time,
             }
             if msg.type == "note_on":
                 ma = MessageAnalyzer_note_on(
                     **kwarg,
-                    blind_note=blind_note,
-                    blind_note_info=blind_note_info,
+                    print_note=print_note,
+                    print_note_info=print_note_info,
                     note_queue=note_queue,
                 )
                 note_address = ma.addr
             elif msg.type == "note_off":
                 ma = MessageAnalyzer_note_off(
                     **kwarg,
-                    blind_note=blind_note,
-                    blind_note_info=blind_note_info,
+                    print_note=print_note,
+                    print_note_info=print_note_info,
                     note_queue=note_queue,
                 )
             elif msg.type == "lyrics":
                 ma = MessageAnalyzer_lyrics(
                     **kwarg,
-                    blind_note=blind_note,
-                    blind_note_info=blind_note_info,
+                    print_note=print_note,
+                    print_note_info=print_note_info,
                     encoding=self.lyric_encoding,
                     note_address=note_address,
                 )
@@ -231,11 +231,9 @@ class MidiFile(mido.MidiFile):
             tempo=tempo,
         )
         rprint("Track total secs/time: " + f"{self.length}/{total_time}")
-        bpm = round(mido.tempo2bpm(tempo, time_signature=time_signature))
-        rprint("bpm(tempo): " + f"{bpm}({tempo})")
-        if not blind_lyric:
+        if print_lyric:
             print(f'LYRIC: "{lyric}"')
-        if not blind_times:
+        if print_times:
             print(f"TIMES: {' '.join(_str_times)}")
 
     def _panel(self):
@@ -258,18 +256,18 @@ class MidiFile(mido.MidiFile):
 
     def print_tracks(
         self,
-        track_bound=None,
-        blind_note=False,
-        blind_time=False,
-        blind_times=True,
-        blind_lyric=True,
+        track_limit=None,
+        print_note=True,
+        print_time=True,
+        print_note_info=False,
         track_list=None,
-        blind_note_info=True,
+        print_times=False,
+        print_lyric=False,
     ):
         """method to analysis"""
 
-        if track_bound is None:
-            track_bound = float("inf")
+        if track_limit is None:
+            track_limit = float("inf")
         rprint(self._panel())
 
         _style_track_line = "#ffffff on #4707a8"
@@ -282,10 +280,10 @@ class MidiFile(mido.MidiFile):
             if track_list is None or track.name in track_list:
                 self._print_tracks(
                     track,
-                    track_bound=track_bound,
-                    blind_note=blind_note,
-                    blind_time=blind_time,
-                    blind_lyric=blind_lyric,
-                    blind_note_info=blind_note_info,
-                    blind_times=blind_times,
+                    track_limit=track_limit,
+                    print_note=print_note,
+                    print_time=print_time,
+                    print_lyric=print_lyric,
+                    print_note_info=print_note_info,
+                    print_times=print_times,
                 )
