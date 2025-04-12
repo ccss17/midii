@@ -30,7 +30,7 @@ def test_midii_print_tracks():
     ma = midii.MidiFile(
         midii.sample.dataset[1], convert_1_to_0=True, lyric_encoding="cp949"
     )
-    # ma.quantize(unit="32")
+    ma.quantize(unit="32")
     ma.print_tracks()
 
 
