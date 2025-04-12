@@ -81,3 +81,9 @@ If you want to convert midi file type `1` to `0`, pass `convert_1_to_0=True`.
 ## License
 
 MIT
+
+# TODO
+
+- for light theme
+- version minimization(especially `numpy`): ex) remove `match` syntax
+- fix messages class(split methods for printable format and data)
