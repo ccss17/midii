@@ -1,17 +1,13 @@
-"""utilities"""
-
 import mido
 
 from .config import DEFAULT_TIME_SIGNATURE
 
 
 def tick2beat(tick, ppqn):
-    """tick2beat"""
     return tick / ppqn
 
 
 def beat2tick(beat, ppqn):
-    """beat2tick"""
     return int(beat * ppqn)
 
 

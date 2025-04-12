@@ -1,6 +1,6 @@
 # MIDI Insights
 
-This package inherits `MidiFile` of [`mido`](https://github.com/mido/mido), adding note duration quantization functionality `MidiFile.quantization` and improving the `MidiFile.print_tracks` method.
+This package inherits `MidiFile` of [`mido`](https://github.com/mido/mido), adding note duration quantization functionality `MidiFile.quantize` and improving the `MidiFile.print_tracks` method.
 
 ```python
 import midii
@@ -9,7 +9,7 @@ mid = midii.MidiFile(
     midii.sample.dataset[0], # or 'song.mid'
     convert_1_to_0=True, lyric_encoding="cp949"
 )
-mid.quantization(unit="32")
+mid.quantize(unit="32")
 mid.print_tracks(
     track_limit=None,
     track_list=None,
@@ -46,7 +46,7 @@ If you want to convert midi file type `1` to `0`, pass `convert_1_to_0=True`.
 
 `lyric_encoding` specify encoding of lyric data.
 
-- `quantization(unit="32")`: Quantize note duration. You can define least unit of quantization from `"1"`(whole note), `"2"`(half note), `"4"`(quarter note), `"8"`(eighth note), `"16"`(sixteenth note), `"32"`(thirty-second note), `"64"`(sixty-fourth note), `"128"`(hundred twenty-eighth note), `"256"`(two hundred fifty-sixth note)
+- `quantize(unit="32")`: Quantize note duration. You can define least unit of quantization from `"1"`(whole note), `"2"`(half note), `"4"`(quarter note), `"8"`(eighth note), `"16"`(sixteenth note), `"32"`(thirty-second note), `"64"`(sixty-fourth note), `"128"`(hundred twenty-eighth note), `"256"`(two hundred fifty-sixth note)
 
     The smaller the minimum unit, the less sync error with the original, and the weaker the quantization effect. As the minimum unit becomes larger, the sync error with the original increases and the quantization effect increases.
 
@@ -66,9 +66,9 @@ If you want to convert midi file type `1` to `0`, pass `convert_1_to_0=True`.
 
     ![](figure/print2.png)
 
-### `quantization`
+### `quantize`
 
-- `quantization(unit="32")`: 
+- `quantize(unit="32")`: 
 
     The smaller the minimum unit, the less sync error with the original, and the weaker the quantization effect. 
     

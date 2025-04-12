@@ -1,5 +1,3 @@
-"""midi file"""
-
 import mido
 
 from rich import print as rprint
@@ -27,8 +25,6 @@ from .utilities import tick2beat, beat2tick, tempo2bpm
 
 
 class MidiFile(mido.MidiFile):
-    """Class for analysis midi file"""
-
     def __init__(
         self,
         filename=None,
@@ -59,7 +55,7 @@ class MidiFile(mido.MidiFile):
         if self.type == 1 and self.convert_1_to_0:
             self.tracks = [self.merged_track]
 
-    def _quantization(self, msg, unit="32"):
+    def _quantize(self, msg, unit="32"):
         q_time = None
         total_q_time = 0
         error = 0
@@ -90,8 +86,7 @@ class MidiFile(mido.MidiFile):
         msg.time += total_q_time
         return error
 
-    def quantization(self, unit="32"):
-        """note duration quantization"""
+    def quantize(self, unit="32"):
         if not any(
             [unit == n.value.name_short.split("/")[-1] for n in list(Note)]
         ):
@@ -106,10 +101,9 @@ class MidiFile(mido.MidiFile):
                     if error:
                         msg.time += error
                         error = 0
-                    error = self._quantization(msg, unit=unit)
+                    error = self._quantize(msg, unit=unit)
 
-    def print_note_num(self, note_num, tempo, time_signature):
-        """print_note_num"""
+    def _print_note_num(self, note_num, tempo, time_signature):
         color = "color(240)" if note_num == 0 else "color(47)"
         bpm = round(mido.tempo2bpm(tempo, time_signature=time_signature))
         info = f"[bold {color}]Total item num of BPM({bpm}): " + f"{note_num}"
@@ -125,7 +119,6 @@ class MidiFile(mido.MidiFile):
         print_times=False,
         print_lyric=False,
     ):
-        """analysis track"""
         tempo = DEFAULT_TEMPO
         time_signature = DEFAULT_TIME_SIGNATURE
         length = 0
@@ -188,7 +181,7 @@ class MidiFile(mido.MidiFile):
                 )
             elif msg.type == "set_tempo":
                 if not first_tempo and self.convert_1_to_0:
-                    self.print_note_num(note_num, tempo, time_signature)
+                    self._print_note_num(note_num, tempo, time_signature)
                 first_tempo = False
                 tempo = msg.tempo
                 ma = MessageAnalyzer_set_tempo(
@@ -207,7 +200,7 @@ class MidiFile(mido.MidiFile):
                 )
             elif msg.type == "end_of_track":
                 if self.convert_1_to_0:
-                    self.print_note_num(note_num, tempo, time_signature)
+                    self._print_note_num(note_num, tempo, time_signature)
                 ma = MessageAnalyzer_end_of_track(**kwarg)
             elif msg.type == "key_signature":
                 ma = MessageAnalyzer_key_signature(**kwarg)
@@ -264,8 +257,6 @@ class MidiFile(mido.MidiFile):
         print_times=False,
         print_lyric=False,
     ):
-        """method to analysis"""
-
         if track_limit is None:
             track_limit = float("inf")
         rprint(self._panel())
