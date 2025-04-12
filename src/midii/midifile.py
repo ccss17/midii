@@ -8,7 +8,6 @@ from rich.panel import Panel
 
 from .note import Note
 from .messages import (
-    MessageAnalyzer_measure,
     MessageAnalyzer_text,
     MessageAnalyzer_set_tempo,
     MessageAnalyzer_end_of_track,
@@ -17,7 +16,6 @@ from .messages import (
     MessageAnalyzer,
     MessageAnalyzer_note_on,
     MessageAnalyzer_note_off,
-    MessageAnalyzer_rest,
     MessageAnalyzer_lyrics,
 )
 from .config import (
@@ -139,113 +137,89 @@ class MidiFile(mido.MidiFile):
         if track_bound is None:
             track_bound = float("inf")
         lyric = ""
-        info_times = [f"TEMPO=({DEFAULT_TEMPO})"]
+        _str_times = [f"TEMPO=({DEFAULT_TEMPO})"]
         total_time = 0
         for i, msg in enumerate(track):
             if i > track_bound:
                 break
             total_time += msg.time
-            info_times.append(f"{msg.time}")
+            _str_times.append(f"{msg.time}")
             length += mido.tick2second(
                 msg.time,
                 ticks_per_beat=self.ticks_per_beat,
                 tempo=tempo,
             )
-            msg_kwarg = {
+            kwarg = {
                 "msg": msg,
                 "ticks_per_beat": self.ticks_per_beat,
                 "tempo": tempo,
                 "idx": i,
                 "length": length,
+                "blind_time": blind_time,
             }
-            match msg.type:
-                case "note_on":
-                    result, note_address = MessageAnalyzer_note_on(
-                        **msg_kwarg, note_queue=note_queue
-                    ).analysis(
-                        blind_time=blind_time,
-                        blind_note=blind_note,
-                        blind_note_info=blind_note_info,
-                    )
-                case "note_off":
-                    result = MessageAnalyzer_note_off(
-                        **msg_kwarg, note_queue=note_queue
-                    ).analysis(
-                        blind_time=blind_time,
-                        blind_note=blind_note,
-                        blind_note_info=blind_note_info,
-                    )
-                case "rest":
-                    result = MessageAnalyzer_rest(
-                        **msg_kwarg, note_queue=note_queue
-                    ).analysis(
-                        blind_time=blind_time,
-                        blind_note=blind_note,
-                        blind_note_info=blind_note_info,
-                    )
-                case "lyrics":
-                    mmal = MessageAnalyzer_lyrics(
-                        **msg_kwarg,
-                        encoding=self.lyric_encoding,
-                    )
-                    if self.lyric_encoding != mmal.encoding:
-                        self.lyric_encoding = mmal.encoding
-                    result, _lyric = mmal.analysis(
-                        note_address=note_address,
-                        blind_time=blind_time,
-                        blind_note=blind_note,
-                        blind_note_info=blind_note_info,
-                    )
-                    lyric += _lyric
-                case "measure":
-                    result = MessageAnalyzer_measure(time_signature).analysis()
-                case "text" | "track_name":
-                    mmat = MessageAnalyzer_text(
-                        **msg_kwarg,
-                        encoding=self.lyric_encoding,
-                    )
-                    if self.lyric_encoding != mmat.encoding:
-                        self.lyric_encoding = mmat.encoding
-                    result = mmat.analysis(blind_time=blind_time)
-                case "set_tempo":
-                    if not first_tempo and self.convert_1_to_0:
-                        self.print_note_num(note_num, tempo, time_signature)
-                    first_tempo = False
-                    result, tempo = MessageAnalyzer_set_tempo(
-                        **msg_kwarg,
-                        time_signature=time_signature,
-                    ).analysis(blind_time=blind_time)
-                    if prev_tempo is None:
-                        prev_tempo = tempo
-                    if note_num:
-                        prev_tempo = tempo
-                        note_num = 0
-                    else:
-                        tempo = prev_tempo
-                    info_times.append(
-                        f"TEMPO=({tempo2bpm(tempo, time_signature)})"
-                    )
-                case "end_of_track":
-                    if self.convert_1_to_0:
-                        self.print_note_num(note_num, tempo, time_signature)
-                    result = MessageAnalyzer_end_of_track(
-                        **msg_kwarg
-                    ).analysis(blind_time=blind_time)
-                case "key_signature":
-                    result = MessageAnalyzer_key_signature(
-                        **msg_kwarg
-                    ).analysis(blind_time=blind_time)
-                case "time_signature":
-                    result, time_signature = MessageAnalyzer_time_signature(
-                        **msg_kwarg
-                    ).analysis(blind_time=blind_time)
-                case _:
-                    result = MessageAnalyzer(**msg_kwarg).analysis(
-                        blind_time=blind_time
-                    )
+            if msg.type == "note_on":
+                ma = MessageAnalyzer_note_on(
+                    **kwarg,
+                    blind_note=blind_note,
+                    blind_note_info=blind_note_info,
+                    note_queue=note_queue,
+                )
+                note_address = ma.addr
+            elif msg.type == "note_off":
+                ma = MessageAnalyzer_note_off(
+                    **kwarg,
+                    blind_note=blind_note,
+                    blind_note_info=blind_note_info,
+                    note_queue=note_queue,
+                )
+            elif msg.type == "lyrics":
+                ma = MessageAnalyzer_lyrics(
+                    **kwarg,
+                    blind_note=blind_note,
+                    blind_note_info=blind_note_info,
+                    encoding=self.lyric_encoding,
+                    note_address=note_address,
+                )
+                lyric += ma.lyric
+            elif msg.type == "text" or msg.type == "track_name":
+                ma = MessageAnalyzer_text(
+                    **kwarg,
+                    encoding=self.lyric_encoding,
+                )
+            elif msg.type == "set_tempo":
+                if not first_tempo and self.convert_1_to_0:
+                    self.print_note_num(note_num, tempo, time_signature)
+                first_tempo = False
+                tempo = msg.tempo
+                ma = MessageAnalyzer_set_tempo(
+                    **kwarg,
+                    time_signature=time_signature,
+                )
+                if prev_tempo is None:
+                    prev_tempo = tempo
+                if note_num:
+                    prev_tempo = tempo
+                    note_num = 0
+                else:
+                    tempo = prev_tempo
+                _str_times.append(
+                    f"TEMPO=({tempo2bpm(tempo, time_signature)})"
+                )
+            elif msg.type == "end_of_track":
+                if self.convert_1_to_0:
+                    self.print_note_num(note_num, tempo, time_signature)
+                ma = MessageAnalyzer_end_of_track(**kwarg)
+            elif msg.type == "key_signature":
+                ma = MessageAnalyzer_key_signature(**kwarg)
+            elif msg.type == "time_signature":
+                time_signature = (msg.numerator, msg.denominator)
+                ma = MessageAnalyzer_time_signature(**kwarg)
+            else:
+                ma = MessageAnalyzer(**kwarg)
 
-            if result:
-                rprint(result)
+            _str = str(ma)
+            if _str:
+                rprint(_str)
 
             if msg.type in ["note_on", "note_off", "lyrics"]:
                 note_num += 1
@@ -262,7 +236,7 @@ class MidiFile(mido.MidiFile):
         if not blind_lyric:
             print(f'LYRIC: "{lyric}"')
         if not blind_times:
-            print(f"TIMES: {' '.join(info_times)}")
+            print(f"TIMES: {' '.join(_str_times)}")
 
     def _panel(self):
         # meta information of midi file
