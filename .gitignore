@@ -11,3 +11,4 @@ wheels/
 .venv
 *.wav
 .vscode/
+uv.lock
