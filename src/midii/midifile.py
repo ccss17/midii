@@ -53,6 +53,7 @@ class MidiFile(mido.MidiFile):
 
         if self.type == 1 and self.convert_1_to_0:
             self.tracks = [self.merged_track]
+            self.type = 0
 
     def _quantize(self, msg, unit="32"):
         q_time = None
@@ -85,7 +86,7 @@ class MidiFile(mido.MidiFile):
         msg.time += total_q_time
         return error
 
-    def quantize(self, unit="32"):
+    def quantize(self, unit="32", error_forwarding=True):
         if not any(
             [unit == n.value.name_short.split("/")[-1] for n in list(Note)]
         ):
@@ -97,7 +98,7 @@ class MidiFile(mido.MidiFile):
                 if msg.type in ["note_on", "note_off", "lyrics"]:
                     if not msg.time:
                         continue
-                    if error:
+                    if error_forwarding and error:
                         msg.time += error
                         error = 0
                     error = self._quantize(msg, unit=unit)

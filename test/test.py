@@ -1,6 +1,9 @@
-import midii
+from copy import deepcopy
+
+import numpy as np
 import mido
 from rich import print as rprint
+import midii
 
 
 def test_sample():
@@ -83,6 +86,25 @@ def test_times():
     print(ma.times)
 
 
+def test_EF_w_wo():
+    ma = midii.MidiFile(
+        midii.sample.dataset[0], convert_1_to_0=True, lyric_encoding="cp949"
+    )
+    ma2 = deepcopy(ma)
+    print(np.cumsum(np.array(ma.times, dtype=np.int64))[-10:])
+    ma.quantize()
+    print(np.cumsum(np.array(ma.times, dtype=np.int64))[-10:])
+    ma2.quantize(error_forwarding=False)
+    print(np.cumsum(np.array(ma2.times, dtype=np.int64))[-10:])
+
+
+def test_midi_type():
+    ma = midii.MidiFile(
+        midii.sample.dataset[0], convert_1_to_0=True, lyric_encoding="cp949"
+    )
+    print(ma.type)
+
+
 if __name__ == "__main__":
     # test_sample()
     # test_midii_simple_print_tracks()
@@ -94,4 +116,6 @@ if __name__ == "__main__":
     # test_version()
     # test_to_json()
     # test_lyrics()
-    test_times()
+    # test_times()
+    # test_EF_w_wo()
+    test_midi_type()
