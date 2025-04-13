@@ -1,6 +1,3 @@
-import json
-from pathlib import Path
-
 import mido
 from rich import print as rprint
 from rich.console import Console
@@ -23,7 +20,7 @@ from .config import (
     DEFAULT_TEMPO,
     DEFAULT_TIME_SIGNATURE,
 )
-from .utilities import tick2beat, beat2tick, tempo2bpm
+from .utilities import tick2beat, beat2tick
 
 
 class MidiFile(mido.MidiFile):
@@ -118,8 +115,6 @@ class MidiFile(mido.MidiFile):
         print_note=True,
         print_time=True,
         print_note_info=False,
-        print_times=False,
-        print_lyric=False,
     ):
         tempo = DEFAULT_TEMPO
         time_signature = DEFAULT_TIME_SIGNATURE
@@ -131,14 +126,11 @@ class MidiFile(mido.MidiFile):
         note_queue = {}
         if track_limit is None:
             track_limit = float("inf")
-        lyric = ""
-        _str_times = [f"TEMPO=({DEFAULT_TEMPO})"]
         total_time = 0
         for i, msg in enumerate(track):
             if i > track_limit:
                 break
             total_time += msg.time
-            _str_times.append(f"{msg.time}")
             current_time += mido.tick2second(
                 msg.time,
                 ticks_per_beat=self.ticks_per_beat,
@@ -175,7 +167,6 @@ class MidiFile(mido.MidiFile):
                     encoding=self.lyric_encoding,
                     note_address=note_address,
                 )
-                lyric += ma.lyric
             elif msg.type == "text" or msg.type == "track_name":
                 ma = MessageAnalyzer_text(
                     **kwarg,
@@ -197,9 +188,6 @@ class MidiFile(mido.MidiFile):
                     note_num = 0
                 else:
                     tempo = prev_tempo
-                _str_times.append(
-                    f"TEMPO=({tempo2bpm(tempo, time_signature)})"
-                )
             elif msg.type == "end_of_track":
                 if self.convert_1_to_0:
                     self._print_note_num(note_num, tempo, time_signature)
@@ -219,17 +207,12 @@ class MidiFile(mido.MidiFile):
             if msg.type in ["note_on", "note_off", "lyrics"]:
                 note_num += 1
 
-        rprint(f"Track lyric encode: {self.lyric_encoding}")
         current_time = mido.tick2second(
             total_time,
             ticks_per_beat=self.ticks_per_beat,
             tempo=tempo,
         )
-        rprint("Track total secs/time: " + f"{current_time}/{total_time}")
-        if print_lyric:
-            print(f'LYRIC: "{lyric}"')
-        if print_times:
-            print(f"TIMES: {' '.join(_str_times)}")
+        rprint("Total secs/time: " + f"{current_time}/{total_time}")
 
     def _panel(self):
         # meta information of midi file
@@ -256,8 +239,6 @@ class MidiFile(mido.MidiFile):
         print_time=True,
         print_note_info=False,
         track_list=None,
-        print_times=False,
-        print_lyric=False,
     ):
         if track_limit is None:
             track_limit = float("inf")
@@ -276,10 +257,53 @@ class MidiFile(mido.MidiFile):
                     track_limit=track_limit,
                     print_note=print_note,
                     print_time=print_time,
-                    print_lyric=print_lyric,
                     print_note_info=print_note_info,
-                    print_times=print_times,
                 )
+
+    def _get_note_data(
+        self, msg, note_map, time_current, tempo, lyric, time_format
+    ):
+        note_data = {
+            "start": None,
+            "end": None,
+            "duration": None,
+            "pitch": None,
+            "lyric": None,
+        }
+        note_data = note_data.copy()
+        try:
+            time_note_on = note_map[msg.note]
+        except KeyError:
+            note_data["pitch"] = 0
+            time_note_on = time_current - msg.time
+        else:
+            note_data["pitch"] = msg.note
+            del note_map[msg.note]
+        duration = time_current - time_note_on
+        if time_format == "ticks":
+            note_data["start"] = time_note_on
+            note_data["end"] = time_current
+            note_data["duration"] = duration
+        elif time_format == "seconds":
+            note_data["start"] = mido.tick2second(
+                time_note_on,
+                ticks_per_beat=self.ticks_per_beat,
+                tempo=tempo,
+            )
+            note_data["end"] = mido.tick2second(
+                time_current,
+                ticks_per_beat=self.ticks_per_beat,
+                tempo=tempo,
+            )
+            note_data["duration"] = mido.tick2second(
+                duration,
+                ticks_per_beat=self.ticks_per_beat,
+                tempo=tempo,
+            )
+        else:
+            raise ValueError
+        note_data["lyric"] = lyric
+        return note_data
 
     def to_json(
         self,
@@ -291,54 +315,55 @@ class MidiFile(mido.MidiFile):
         time_current = 0
         lyric = ""
         result = []
-        note_data = {
-            "start": None,
-            "end": None,
-            "duration": None,
-            "pitch": None,
-            "lyric": None,
-        }
-        duration = 0
+        note_map = {}
         for msg in self.tracks[0]:
-            duration += msg.time
             time_current += msg.time
-            if msg.type == "note_on":
-                time_note_on = time_current
-                duration = 0
-            elif msg.type == "note_off":
-                _note_data = note_data.copy()
-                if time_format == "ticks":
-                    _note_data["start"] = time_note_on
-                    _note_data["end"] = time_current
-                    _note_data["duration"] = duration
-                elif time_format == "seconds":
-                    _note_data["start"] = mido.tick2second(
-                        time_note_on,
-                        ticks_per_beat=self.ticks_per_beat,
-                        tempo=tempo,
-                    )
-                    _note_data["end"] = mido.tick2second(
-                        time_current,
-                        ticks_per_beat=self.ticks_per_beat,
-                        tempo=tempo,
-                    )
-                    _note_data["duration"] = mido.tick2second(
-                        duration,
-                        ticks_per_beat=self.ticks_per_beat,
-                        tempo=tempo,
-                    )
-                else:
-                    raise ValueError
-                _note_data["pitch"] = msg.note
-                _note_data["lyric"] = lyric
-                result.append(_note_data)
-                lyric = ""
+            if msg.type == "set_tempo":
+                tempo = msg.tempo
             elif msg.type == "lyrics":
                 lyric += MessageAnalyzer_lyrics(
                     msg=msg,
                     encoding=self.lyric_encoding,
                 ).lyric
-            elif msg.type == "set_tempo":
-                tempo = msg.tempo
+            elif msg.type == "note_on":
+                note_map[msg.note] = time_current
+            elif msg.type == "note_off":
+                result.append(
+                    self._get_note_data(
+                        msg, note_map, time_current, tempo, lyric, time_format
+                    )
+                )
+                lyric = ""
 
         return result
+
+    @property
+    def times(self):
+        if self.type == 0:
+            return [msg.time for msg in self.tracks[0]]
+        elif self.type == 1:
+            return [[msg.time for msg in track] for track in self.tracks]
+        elif self.type == 2:
+            raise NotImplementedError
+
+    @property
+    def lyrics(self):
+        lyrics = ""
+        if self.type == 0:
+            for msg in self.tracks[0]:
+                if msg.type == "lyrics":
+                    lyrics += MessageAnalyzer_lyrics(
+                        msg=msg,
+                        encoding=self.lyric_encoding,
+                    ).lyric
+        elif self.type == 1:
+            for track in self.tracks:
+                for msg in track:
+                    if msg.type == "lyrics":
+                        lyrics += MessageAnalyzer_lyrics(
+                            msg=msg,
+                            encoding=self.lyric_encoding,
+                        ).lyric
+        elif self.type == 2:
+            raise NotImplementedError
+        return lyrics

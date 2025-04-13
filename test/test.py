@@ -67,6 +67,22 @@ def test_to_json():
     rprint(ma.to_json())
 
 
+def test_lyrics():
+    ma = midii.MidiFile(
+        midii.sample.dataset[0], convert_1_to_0=True, lyric_encoding="cp949"
+    )
+    print(ma.lyrics)
+
+
+def test_times():
+    ma = midii.MidiFile(
+        midii.sample.dataset[0], convert_1_to_0=True, lyric_encoding="cp949"
+    )
+    print(ma.times)
+    ma.quantize()
+    print(ma.times)
+
+
 if __name__ == "__main__":
     # test_sample()
     # test_midii_simple_print_tracks()
@@ -76,4 +92,6 @@ if __name__ == "__main__":
     # test_midii_quantize()
     # test_midii_print_times()
     # test_version()
-    test_to_json()
+    # test_to_json()
+    # test_lyrics()
+    test_times()

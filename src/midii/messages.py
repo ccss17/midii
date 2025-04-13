@@ -91,7 +91,8 @@ class MessageAnalyzer_set_tempo(MessageAnalyzer):
         bpm = tempo2bpm(self.msg.tempo, time_signature=self.time_signature)
         return self.str_format(
             head=self.str_type(),
-            body=f"[white]BPM=[/white][color(190)]{bpm}({self.msg.tempo})[/color(190)]",
+            body=f"[white]BPM=[/white][color(190)]{bpm}"
+            + f"({self.msg.tempo})[/color(190)]",
         )
 
 
