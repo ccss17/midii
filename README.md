@@ -85,4 +85,3 @@ MIT
 # TODO
 
 - quantization algorithm code optimization
-- to_json, save(format='json')
