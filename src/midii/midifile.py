@@ -79,7 +79,7 @@ class MidiFile(mido.MidiFile):
         if beat < beat_unit / 2:  # beat in [0, beat_unit/2)
             error = msg.time
             msg.time = 0  # approximate to beat=0
-        elif beat < beat_unit:  # beat in [beat_unit/2, beat_unit)
+        else:  # beat in [beat_unit/2, beat_unit)
             error = msg.time - beat2tick(beat_unit, self.ticks_per_beat)
             # approximate to beat=beat_unit
             msg.time = beat2tick(beat_unit, self.ticks_per_beat)
@@ -98,10 +98,11 @@ class MidiFile(mido.MidiFile):
                 if msg.type in ["note_on", "note_off", "lyrics"]:
                     if not msg.time:
                         continue
-                    if error_forwarding and error:
+                    if error_forwarding and error and msg.time + error >= 0:
                         msg.time += error
                         error = 0
-                    error = self._quantize(msg, unit=unit)
+                    current_error = self._quantize(msg, unit=unit)
+                    error += current_error
 
     def _print_note_num(self, note_num, tempo, time_signature):
         color = "color(240)" if note_num == 0 else "color(47)"
@@ -341,9 +342,20 @@ class MidiFile(mido.MidiFile):
     @property
     def times(self):
         if self.type == 0:
-            return [msg.time for msg in self.tracks[0]]
+            return [
+                msg.time
+                for msg in self.tracks[0]
+                if msg.type in ["note_on", "note_off", "lyrics"]
+            ]
         elif self.type == 1:
-            return [[msg.time for msg in track] for track in self.tracks]
+            return [
+                [
+                    msg.time
+                    for msg in track
+                    if msg.type in ["note_on", "note_off", "lyrics"]
+                ]
+                for track in self.tracks
+            ]
         elif self.type == 2:
             raise NotImplementedError
 

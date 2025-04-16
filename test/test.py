@@ -39,10 +39,11 @@ def test_midii_print_tracks():
 
 def test_midii_quantize():
     ma = midii.MidiFile(
-        midii.sample.dataset[1], convert_1_to_0=True, lyric_encoding="cp949"
+        midii.sample.dataset[0], convert_1_to_0=True, lyric_encoding="cp949"
     )
+    print(np.mean(np.array(ma.times) % 15))
     ma.quantize(unit="32")
-    ma.print_tracks()
+    print(np.mean(np.array(ma.times) % 15))
 
 
 def test_version():
@@ -111,11 +112,11 @@ if __name__ == "__main__":
     # test_midii_real_print_tracks()
     # test_mido_dataset_print_tracks()
     # test_midii_print_tracks()
-    # test_midii_quantize()
+    test_midii_quantize()
     # test_midii_print_times()
     # test_version()
     # test_to_json()
     # test_lyrics()
     # test_times()
     # test_EF_w_wo()
-    test_midi_type()
+    # test_midi_type()
