@@ -1,5 +1,3 @@
-"""note rest information dictionary"""
-
 from collections import namedtuple
 from enum import Enum
 
@@ -9,33 +7,7 @@ NoteNamedTuple = namedtuple(
 )
 
 
-class Rest(Enum):
-    """Rest Enum"""
-
-    WHOLE_REST = NoteNamedTuple(4, "whole rest", "온쉼표", "𝄻", "r/1")
-    HALF_REST = NoteNamedTuple(2, "half rest", "2분쉼표", "𝄼", "r/2")
-    QUARTER_REST = NoteNamedTuple(1, "quarter rest", "4분쉼표", "𝄽", "r/4")
-    EIGHTH_REST = NoteNamedTuple(0.5, "eighth rest", "8분쉼표", "𝄾", "r/8")
-    SIXTEENTH_REST = NoteNamedTuple(
-        0.25, "sixteenth rest", "16분쉼표", "𝄿", "r/16"
-    )
-    THIRTY_SECOND_REST = NoteNamedTuple(
-        0.125, "thirty-second rest", "32분쉼표", "𝅀", "r/32"
-    )
-    SIXTY_FOURTH_REST = NoteNamedTuple(
-        0.0625, "sixty-fourth rest", "64분쉼표", "𝅁", "r/64"
-    )
-    HUNDRED_TWENTY_EIGHTH_REST = NoteNamedTuple(
-        0.03125, "hundred twenty-eighth rest", "128분쉼표", "𝅂", "r/128"
-    )
-    TWO_HUNDRED_FIFTY_SIXTH_REST = NoteNamedTuple(
-        0.015625, "two hundred fifty-sixth rest", "256분쉼표", "𝅂", "r/256"
-    )
-
-
 class Note(Enum):
-    """Note Enum"""
-
     WHOLE_NOTE = NoteNamedTuple(4, "whole note", "온음표", "𝅝", "n/1")
     HALF_NOTE = NoteNamedTuple(2, "half note", "2분음표", "𝅗𝅥", "n/2")
     QUARTER_NOTE = NoteNamedTuple(1, "quarter note", "4분음표", "♩", "n/4")
@@ -57,9 +29,29 @@ class Note(Enum):
     )
 
 
-class Rest_all(Enum):
-    """Rest Enum"""
+class Rest(Enum):
+    WHOLE_REST = NoteNamedTuple(4, "whole rest", "온쉼표", "𝄻", "r/1")
+    HALF_REST = NoteNamedTuple(2, "half rest", "2분쉼표", "𝄼", "r/2")
+    QUARTER_REST = NoteNamedTuple(1, "quarter rest", "4분쉼표", "𝄽", "r/4")
+    EIGHTH_REST = NoteNamedTuple(0.5, "eighth rest", "8분쉼표", "𝄾", "r/8")
+    SIXTEENTH_REST = NoteNamedTuple(
+        0.25, "sixteenth rest", "16분쉼표", "𝄿", "r/16"
+    )
+    THIRTY_SECOND_REST = NoteNamedTuple(
+        0.125, "thirty-second rest", "32분쉼표", "𝅀", "r/32"
+    )
+    SIXTY_FOURTH_REST = NoteNamedTuple(
+        0.0625, "sixty-fourth rest", "64분쉼표", "𝅁", "r/64"
+    )
+    HUNDRED_TWENTY_EIGHTH_REST = NoteNamedTuple(
+        0.03125, "hundred twenty-eighth rest", "128분쉼표", "𝅂", "r/128"
+    )
+    TWO_HUNDRED_FIFTY_SIXTH_REST = NoteNamedTuple(
+        0.015625, "two hundred fifty-sixth rest", "256분쉼표", "𝅂", "r/256"
+    )
 
+
+class Rest_all(Enum):
     DOTTED_OCTUPLE_WHOLE_REST = NoteNamedTuple(
         48, "dotted octuple whole rest", "점8온쉼표", "𝆶.", "r*8."
     )
@@ -135,8 +127,6 @@ class Rest_all(Enum):
 
 
 class Note_all(Enum):
-    """Note_all Enum"""
-
     DOTTED_OCTUPLE_WHOLE_NOTE = NoteNamedTuple(
         48, "dotted octuple whole note", "점8온음표", "𝆶.", "n*8."
     )
