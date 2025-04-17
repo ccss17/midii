@@ -24,13 +24,13 @@ class MidiMessageAnalyzer:
     def __init__(
         self,
         msg,
-        ppqn=DEFAULT_TICKS_PER_BEAT,
+        ticks_per_beat=DEFAULT_TICKS_PER_BEAT,
         tempo=DEFAULT_TEMPO,
         idx=0,
         length=0,
     ):
         self.msg = msg
-        self.ppqn = ppqn
+        self.ticks_per_beat = ticks_per_beat
         self.tempo = tempo
         self.idx_info = f"[color(244)]{idx:4}[/color(244)]"
         self.length = length
@@ -46,7 +46,7 @@ class MidiMessageAnalyzer:
             sub_color = "white"
             time = mido.tick2second(
                 self.msg.time,
-                ticks_per_beat=self.ppqn,
+                ticks_per_beat=self.ticks_per_beat,
                 tempo=self.tempo,
             )
             return " ".join(
@@ -81,13 +81,15 @@ class MidiMessageAnalyzer_set_tempo(MidiMessageAnalyzer):
     def __init__(
         self,
         msg,
-        ppqn=DEFAULT_TICKS_PER_BEAT,
+        ticks_per_beat=DEFAULT_TICKS_PER_BEAT,
         tempo=DEFAULT_TEMPO,
         idx=0,
         length=0,
         time_signature=DEFAULT_TIME_SIGNATURE,
     ):
-        super().__init__(msg, ppqn, tempo=tempo, idx=idx, length=length)
+        super().__init__(
+            msg, ticks_per_beat, tempo=tempo, idx=idx, length=length
+        )
         self.time_signature = time_signature
 
     def analysis(self, blind_time=False):
@@ -162,13 +164,15 @@ class MidiMessageAnalyzer_text(MidiMessageAnalyzer):
     def __init__(
         self,
         msg,
-        ppqn=DEFAULT_TICKS_PER_BEAT,
+        ticks_per_beat=DEFAULT_TICKS_PER_BEAT,
         tempo=DEFAULT_TEMPO,
         idx=0,
         length=0,
         encoding="latin-1",
     ):
-        super().__init__(msg, ppqn, tempo=tempo, idx=idx, length=length)
+        super().__init__(
+            msg, ticks_per_beat, tempo=tempo, idx=idx, length=length
+        )
         self.encoded_text = self.msg.bin()[3:]
         self.encoding = encoding
 
@@ -186,7 +190,7 @@ class MidiMessageAnalyzer_SoundUnit(MidiMessageAnalyzer):
     def __init__(
         self,
         msg,
-        ppqn=DEFAULT_TICKS_PER_BEAT,
+        ticks_per_beat=DEFAULT_TICKS_PER_BEAT,
         tempo=DEFAULT_TEMPO,
         idx=0,
         length=0,
@@ -194,7 +198,7 @@ class MidiMessageAnalyzer_SoundUnit(MidiMessageAnalyzer):
     ):
         super().__init__(
             msg,
-            ppqn,
+            ticks_per_beat,
             tempo=tempo,
             idx=idx,
             length=length,
@@ -225,7 +229,7 @@ class MidiMessageAnalyzer_SoundUnit(MidiMessageAnalyzer):
         """select minimum error"""
         if tick == 0:
             return None, None
-        beat = tick2beat(tick, self.ppqn)
+        beat = tick2beat(tick, self.ticks_per_beat)
         min_error = float("inf")
         quantized_note = None
         note_enum = Rest_all if as_rest else Note_all
@@ -281,7 +285,7 @@ class MidiMessageAnalyzer_note_on(MidiMessageAnalyzer_SoundUnit):
         if error is not None and not blind_note_info:
             info_quantization = self.quantization_info(
                 round(error, 3),
-                tick2beat(self.msg.time, self.ppqn),
+                tick2beat(self.msg.time, self.ticks_per_beat),
                 quantized_note,
             )
         color = f"color({COLOR[addr % len(COLOR)]})"
@@ -326,7 +330,7 @@ class MidiMessageAnalyzer_note_off(MidiMessageAnalyzer_SoundUnit):
         if error is not None and not blind_note_info:
             info_quantization = self.quantization_info(
                 round(error, 3),
-                tick2beat(self.msg.time, self.ppqn),
+                tick2beat(self.msg.time, self.ticks_per_beat),
                 quantized_note,
             )
         result = ""
@@ -354,7 +358,7 @@ class MidiMessageAnalyzer_rest(MidiMessageAnalyzer_SoundUnit):
         if error is not None and not blind_note_info:
             info_quantization = self.quantization_info(
                 round(error, 3),
-                tick2beat(self.msg.time, self.ppqn),
+                tick2beat(self.msg.time, self.ticks_per_beat),
                 quantized_note,
             )
         result = ""
@@ -379,14 +383,14 @@ class MidiMessageAnalyzer_lyrics(
     def __init__(
         self,
         msg,
-        ppqn=DEFAULT_TICKS_PER_BEAT,
+        ticks_per_beat=DEFAULT_TICKS_PER_BEAT,
         tempo=DEFAULT_TEMPO,
         idx=0,
         length=0,
         encoding="latin-1",
     ):
         self.msg = msg
-        self.ppqn = ppqn
+        self.ticks_per_beat = ticks_per_beat
         self.tempo = tempo
         self.idx_info = f"[color(244)]{idx:4}[/color(244)]"
         self.length = length
@@ -431,7 +435,7 @@ class MidiMessageAnalyzer_lyrics(
         if error is not None and not blind_note_info:
             info_quantization = self.quantization_info(
                 round(error, 3),
-                tick2beat(self.msg.time, self.ppqn),
+                tick2beat(self.msg.time, self.ticks_per_beat),
                 quantized_note,
             )
         head = (

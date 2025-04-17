@@ -40,9 +40,9 @@ def test_midii_print_tracks():
 
 def test_midii_quantization():
     ma = midii.MidiFile(
-        midii.sample.dataset[1], convert_1_to_0=True, lyric_encoding="cp949"
+        midii.sample.dataset[0], convert_1_to_0=True, lyric_encoding="cp949"
     )
-    ma.quantization(unit="32")
+    ma.quantization(unit="32", error_forwarding=False)
     ma.print_tracks(
         track_bound=None,
         track_list=None,
@@ -72,6 +72,6 @@ if __name__ == "__main__":
     # test_midii_real_print_tracks()
     # test_mido_dataset_print_tracks()
     # test_midii_print_tracks()
-    # test_midii_quantization()
+    test_midii_quantization()
     # test_version()
-    test_midii_print_times()
+    # test_midii_print_times()

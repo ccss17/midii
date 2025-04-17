@@ -92,7 +92,7 @@ class MidiFile(mido.MidiFile):
         msg.time += total_q_time
         return error
 
-    def quantization(self, unit="32"):
+    def quantization(self, unit="32", error_forwarding=True):
         """note duration quantization"""
         if not any(
             [unit == n.value.name_short.split("/")[-1] for n in list(Note)]
@@ -105,7 +105,7 @@ class MidiFile(mido.MidiFile):
                 if msg.type in ["note_on", "note_off", "lyrics"]:
                     if not msg.time:
                         continue
-                    if error:
+                    if error_forwarding and error:
                         msg.time += error
                         error = 0
                     error = self._quantization(msg, unit=unit)
@@ -153,7 +153,7 @@ class MidiFile(mido.MidiFile):
             )
             msg_kwarg = {
                 "msg": msg,
-                "ppqn": self.ticks_per_beat,
+                "ticks_per_beat": self.ticks_per_beat,
                 "tempo": tempo,
                 "idx": i,
                 "length": length,
