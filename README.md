@@ -36,6 +36,10 @@ pip install midii
 
 - `real`: List object that contains real-world midi examples.
 
+##  `midii.quantize`
+
+`midii.quantize`: 
+
 ## `class midii.MidiFile`
 
 `class midii.MidiFile(filename=None, file=None, type=1, ticks_per_beat=480, charset='latin1', debug=False, clip=False, tracks=None, convert_1_to_0=False, lyric_encoding='latin-1')`

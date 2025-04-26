@@ -53,10 +53,34 @@ def test_midii_quantization():
 
 def test_version():
     from importlib.metadata import version
+    import platform
 
-    print("mido version:", version("mido"))
-    print("numpy version:", version("numpy"))
-    print("rich version:", version("rich"))
+    pkgs = [
+        "mido",
+        "rich",
+        "ipykernel",
+        "matplotlib",
+        "pytest",
+        "numpy",
+        "numba",
+    ]
+    for pkg in pkgs:
+        print(f"{pkg} version:", version(pkg))
+    print("Python version:", platform.python_version())
+
+    # mido version: 1.3.3
+    # rich version: 14.0.0
+    # ipykernel version: 6.29.5
+    # matplotlib version: 3.10.1
+    # pytest version: 8.3.5
+    # numpy version: 2.2.5
+    # numba version: 0.61.2
+    # Python version: 3.13.1
+
+    # print("mido version:", version("mido"))
+    # print("numpy version:", version("numpy"))
+    # print("rich version:", version("rich"))
+    # print("numba version:", version("numba"))
 
 
 def test_midii_print_times():
@@ -120,8 +144,8 @@ if __name__ == "__main__":
     # test_midii_real_print_tracks()
     # test_mido_dataset_print_tracks()
     # test_midii_print_tracks()
-    # test_midii_quantization()
-    # test_version()
+    test_midii_quantization()
+    test_version()
     # test_midii_print_times()
     # test_standalone_quantize()
-    test_divmod(100, 18)
+    # test_divmod(100, 18)

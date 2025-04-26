@@ -61,16 +61,6 @@ class MidiFile(mido.MidiFile):
         error_forwarding=True,
         targets=["note_on", "note_off", "lyrics"],
     ):
-        if not any(
-            [unit == n.value.name_short.split("/")[-1] for n in list(Note)]
-        ):
-            raise ValueError
-
-        for n in list(Note):
-            if unit == n.value.name_short.split("/")[-1]:
-                unit = n.value.beat
-
-        quanta = [x.value.beat for x in list(Note)]
         if self.type == 0:
             quantized_ticks, error = quantize(
                 ticks=self.times,
@@ -88,7 +78,6 @@ class MidiFile(mido.MidiFile):
                     ticks=track_times,
                     unit=unit,
                     ticks_per_beat=self.ticks_per_beat,
-                    quanta=quanta,
                     error_forwarding=error_forwarding,
                 )
                 quantized_ticks_iter = iter(quantized_ticks)
