@@ -82,6 +82,12 @@ If you want to convert midi file type `1` to `0`, pass `convert_1_to_0=True`.
 
     ![](figure/q2.png)
 
+## Figure
+
+### time drift mitigating
+
+![](figure/figure_EF_w_wo_comparison.pdf)
+
 ## License
 
 MIT
