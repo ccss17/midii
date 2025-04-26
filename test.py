@@ -10,14 +10,14 @@ def test_sample():
 
 def test_midii_simple_print_tracks():
     ma = midii.MidiFile(midii.sample.simple[0])
-    ma.quantization(unit="256")
+    ma.quantize(unit="256")
     ma.print_tracks()
 
 
 def test_midii_real_print_tracks():
     ma = midii.MidiFile(midii.sample.real[1])
-    ma.quantization(unit="256")
-    ma.print_tracks(blind_note_info=True, track_list=["piano-r"])
+    ma.quantize(unit="256")
+    ma.print_tracks(print_note_info=False, track_list=["piano-r"])
 
 
 def test_mido_dataset_print_tracks():
@@ -29,25 +29,25 @@ def test_midii_print_tracks():
     ma = midii.MidiFile(
         midii.sample.dataset[1], convert_1_to_0=True, lyric_encoding="cp949"
     )
-    # ma.quantization(unit="32")
+    # ma.quantize(unit="32")
     ma.print_tracks(
-        track_bound=None,
+        track_limit=None,
         track_list=None,
-        blind_note_info=True,
-        blind_lyric=True,
+        print_note_info=False,
     )
 
 
 def test_midii_quantization():
     ma = midii.MidiFile(
-        midii.sample.dataset[0], convert_1_to_0=True, lyric_encoding="cp949"
+        midii.sample.dataset[0],
+        lyric_encoding="cp949",
+        # midii.sample.dataset[0], convert_1_to_0=True, lyric_encoding="cp949"
     )
-    ma.quantization(unit="32", error_forwarding=False)
+    ma.quantize(unit="32", error_forwarding=False)
     ma.print_tracks(
-        track_bound=None,
+        track_limit=None,
         track_list=None,
-        blind_note_info=True,
-        blind_lyric=True,
+        print_note_info=False,
     )
 
 
@@ -97,6 +97,23 @@ def test_standalone_quantize():
     # print(times_q128[subset_last])
 
 
+def test_divmod(t, u):
+    if False:
+        # $ hyperfine --warmup 10 -r 200 "python test.py"
+        # Benchmark 1: python test.py
+        #   Time (mean ± σ):     228.3 ms ±   8.0 ms    [User: 103.5 ms, System: 90.9 ms]
+        #   Range (min … max):   215.8 ms … 262.7 ms    200 runs
+        q, r = divmod(t, u)
+    else:
+        # hyperfine --warmup 10 -r 200 "python test.py"
+        # Benchmark 1: python test.py
+        #   Time (mean ± σ):     229.2 ms ±   8.5 ms    [User: 104.3 ms, System: 89.7 ms]
+        #   Range (min … max):   215.4 ms … 275.7 ms    200 runs
+        q = t // u
+        r = t - q * u  # r = t % u
+    return q, r
+
+
 if __name__ == "__main__":
     # test_sample()
     # test_midii_simple_print_tracks()
@@ -106,4 +123,5 @@ if __name__ == "__main__":
     # test_midii_quantization()
     # test_version()
     # test_midii_print_times()
-    test_standalone_quantize()
+    # test_standalone_quantize()
+    test_divmod(100, 18)

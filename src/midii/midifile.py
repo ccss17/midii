@@ -20,7 +20,6 @@ from .config import (
     DEFAULT_TEMPO,
     DEFAULT_TIME_SIGNATURE,
 )
-from .utilities import tick2beat, beat2tick
 from .quantize import quantize
 
 
@@ -56,7 +55,12 @@ class MidiFile(mido.MidiFile):
             self.tracks = [self.merged_track]
             self.type = 0
 
-    def quantize(self, unit="32", error_forwarding=True):
+    def quantize(
+        self,
+        unit="32",
+        error_forwarding=True,
+        targets=["note_on", "note_off", "lyrics"],
+    ):
         if not any(
             [unit == n.value.name_short.split("/")[-1] for n in list(Note)]
         ):
@@ -66,24 +70,33 @@ class MidiFile(mido.MidiFile):
             if unit == n.value.name_short.split("/")[-1]:
                 unit = n.value.beat
 
-        for track in self.tracks:
-            error = 0
-            ticks = []
-            for msg in track:
-                if msg.type in ["note_on", "note_off", "lyrics"]:
-                    ticks.append(msg.time)
+        quanta = [x.value.beat for x in list(Note)]
+        if self.type == 0:
             quantized_ticks, error = quantize(
-                ticks=ticks,
+                ticks=self.times,
                 unit=unit,
                 ticks_per_beat=self.ticks_per_beat,
-                quanta=[x.value.beat for x in list(Note)],
                 error_forwarding=error_forwarding,
             )
-            i = 0
-            for msg in track:
-                if msg.type in ["note_on", "note_off", "lyrics"]:
-                    msg.time = quantized_ticks[i]
-                    i += 1
+            quantized_ticks_iter = iter(quantized_ticks)
+            for msg in self.tracks[0]:
+                if msg.type in targets:
+                    msg.time = next(quantized_ticks_iter)
+        elif self.type == 1:
+            for track, track_times in zip(self.tracks, self.times):
+                quantized_ticks, error = quantize(
+                    ticks=track_times,
+                    unit=unit,
+                    ticks_per_beat=self.ticks_per_beat,
+                    quanta=quanta,
+                    error_forwarding=error_forwarding,
+                )
+                quantized_ticks_iter = iter(quantized_ticks)
+                for msg in track:
+                    if msg.type in targets:
+                        msg.time = next(quantized_ticks_iter)
+        else:  # type == 2
+            raise NotImplementedError
 
     def _print_note_num(self, note_num, tempo, time_signature):
         color = "color(240)" if note_num == 0 else "color(47)"
@@ -337,7 +350,7 @@ class MidiFile(mido.MidiFile):
                 ]
                 for track in self.tracks
             ]
-        elif self.type == 2:
+        else:  # type == 2
             raise NotImplementedError
 
     @property

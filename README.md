@@ -81,7 +81,3 @@ If you want to convert midi file type `1` to `0`, pass `convert_1_to_0=True`.
 ## License
 
 MIT
-
-# TODO
-
-- quantization algorithm code optimization

@@ -1,5 +1,3 @@
-import math
-
 import mido
 
 from .config import DEFAULT_TIME_SIGNATURE
@@ -10,8 +8,7 @@ def tick2beat(tick, ticks_per_beat):
 
 
 def beat2tick(beat, ticks_per_beat):
-    return math.floor(beat * ticks_per_beat)
-    # return int(beat * ticks_per_beat)
+    return int(beat * ticks_per_beat)
 
 
 # Adapted from pretty_midi (utilities.py)
