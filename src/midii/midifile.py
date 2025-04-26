@@ -21,6 +21,7 @@ from .config import (
     DEFAULT_TIME_SIGNATURE,
 )
 from .utilities import tick2beat, beat2tick
+from .quantize import quantize
 
 
 class MidiFile(mido.MidiFile):
@@ -55,54 +56,34 @@ class MidiFile(mido.MidiFile):
             self.tracks = [self.merged_track]
             self.type = 0
 
-    def _quantize(self, msg, unit="32"):
-        q_time = None
-        total_q_time = 0
-        error = 0
-        for note_item in list(Note):
-            beat = tick2beat(msg.time, self.ticks_per_beat)
-            q_beat = note_item.value.beat
-            q_time = beat2tick(q_beat, self.ticks_per_beat)
-            if beat > q_beat:
-                msg.time -= q_time
-                total_q_time += q_time
-            elif beat == q_beat:  # msg is quantized
-                msg.time += total_q_time
-                return error
-                # return msg, error
-            if unit in note_item.value.name_short:
-                beat_unit = note_item.value.beat  # beat_unit
-                break
-
-        # beat in [0, beat_unit), i.e. beat_unit=0.125
-        beat = tick2beat(msg.time, self.ticks_per_beat)
-        if beat < beat_unit / 2:  # beat in [0, beat_unit/2)
-            error = msg.time
-            msg.time = 0  # approximate to beat=0
-        else:  # beat in [beat_unit/2, beat_unit)
-            error = msg.time - beat2tick(beat_unit, self.ticks_per_beat)
-            # approximate to beat=beat_unit
-            msg.time = beat2tick(beat_unit, self.ticks_per_beat)
-        msg.time += total_q_time
-        return error
-
     def quantize(self, unit="32", error_forwarding=True):
         if not any(
             [unit == n.value.name_short.split("/")[-1] for n in list(Note)]
         ):
             raise ValueError
 
+        for n in list(Note):
+            if unit == n.value.name_short.split("/")[-1]:
+                unit = n.value.beat
+
         for track in self.tracks:
             error = 0
+            ticks = []
             for msg in track:
                 if msg.type in ["note_on", "note_off", "lyrics"]:
-                    if not msg.time:
-                        continue
-                    if error_forwarding and error and msg.time + error >= 0:
-                        msg.time += error
-                        error = 0
-                    current_error = self._quantize(msg, unit=unit)
-                    error += current_error
+                    ticks.append(msg.time)
+            quantized_ticks, error = quantize(
+                ticks=ticks,
+                unit=unit,
+                ticks_per_beat=self.ticks_per_beat,
+                quanta=[x.value.beat for x in list(Note)],
+                error_forwarding=error_forwarding,
+            )
+            i = 0
+            for msg in track:
+                if msg.type in ["note_on", "note_off", "lyrics"]:
+                    msg.time = quantized_ticks[i]
+                    i += 1
 
     def _print_note_num(self, note_num, tempo, time_signature):
         color = "color(240)" if note_num == 0 else "color(47)"
