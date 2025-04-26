@@ -84,9 +84,17 @@ If you want to convert midi file type `1` to `0`, pass `convert_1_to_0=True`.
 
 ## Figure
 
-### time drift mitigating
+### quantization effect(piano roll)
 
-![](figure/figure_EF_w_wo_comparison.pdf)
+![](figure/figure_piano_roll.png)
+
+### EF effect(time drift mitigating)
+
+![](figure/figure_EF_w_wo_comparison.png)
+
+### EF effect(time drift mitigating)
+
+![](figure/figure_timing_deviation.png)
 
 ## License
 
