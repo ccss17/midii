@@ -98,3 +98,7 @@ If you want to convert midi file type `1` to `0`, pass `convert_1_to_0=True`.
 # License
 
 MIT
+
+# TODO
+
+- quantization 수행 공간이 discrete 한 경우 error 가 커지는 것을 확인하여, continuous 한 공간에서 진행되어야 에러가 없을듯.
