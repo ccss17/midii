@@ -12,7 +12,7 @@ from .config import (
     DEFAULT_TIME_SIGNATURE,
     COLOR,
 )
-from .utilities import tick2beat, note_number_to_name, tempo2bpm
+from .utilities import tick2beat, note_number_to_name
 
 
 class MessageAnalyzer:
@@ -88,7 +88,9 @@ class MessageAnalyzer_set_tempo(MessageAnalyzer):
         self.time_signature = time_signature
 
     def __str__(self):
-        bpm = tempo2bpm(self.msg.tempo, time_signature=self.time_signature)
+        bpm = round(
+            mido.tempo2bpm(self.msg.tempo, time_signature=self.time_signature)
+        )
         return self.str_format(
             head=self.str_type(),
             body=f"[white]BPM=[/white][color(190)]{bpm}"

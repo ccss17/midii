@@ -1,6 +1,4 @@
-import mido
-
-from .config import DEFAULT_TIME_SIGNATURE
+__all__ = ["tick2beat, beat2tick, note_number_to_name"]
 
 
 def tick2beat(tick, ticks_per_beat):
@@ -42,7 +40,3 @@ def note_number_to_name(note_number):
 
     # Get the semitone and the octave, and concatenate to create the name
     return semis[note_number % 12] + str(note_number // 12 - 1)
-
-
-def tempo2bpm(tempo, time_signature=DEFAULT_TIME_SIGNATURE):
-    return round(mido.tempo2bpm(tempo, time_signature=time_signature))

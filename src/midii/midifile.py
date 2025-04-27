@@ -3,7 +3,6 @@ from rich import print as rprint
 from rich.console import Console
 from rich.panel import Panel
 
-from .note import Note
 from .messages import (
     MessageAnalyzer_text,
     MessageAnalyzer_set_tempo,
