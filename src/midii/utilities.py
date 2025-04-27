@@ -1,4 +1,37 @@
-__all__ = ["tick2beat", "beat2tick", "note_number_to_name"]
+__all__ = [
+    "tick2beat",
+    "beat2tick",
+    "note_number_to_name",
+    "duration_secs_to_frames",
+]
+
+import numpy as np
+
+
+# Adapted from . (.py)
+# Source: https://github.com/././blob/main/..py
+# Original License: MIT
+def duration_secs_to_frames(note_duration_sec, sr, hop_length):
+    """
+    If the unit of the note duration is "seconds", the unit should be converted to "frames"
+    Furthermore, it should be rounded to integer and this causes rounding error
+    This function includes error handling process that alleviates the rounding error
+    """
+
+    frames_per_sec = sr / hop_length
+    note_duration_frame = note_duration_sec * frames_per_sec
+    note_duration_frame_int = note_duration_frame.copy().astype(np.int64)
+    errors = (
+        note_duration_frame - note_duration_frame_int
+    )  # rounding error per each note
+    errors_sum = int(np.sum(errors))
+
+    top_k_errors_idx = errors.argsort()[-errors_sum:][::-1]
+
+    for i in top_k_errors_idx:
+        note_duration_frame_int[i] += 1
+
+    return note_duration_frame_int
 
 
 def tick2beat(tick, ticks_per_beat):
