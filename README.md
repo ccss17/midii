@@ -53,9 +53,15 @@ If you want to convert midi file type `1` to `0`, pass `convert_1_to_0=True`.
 
     By default it will prints all tracks. You can specify the tracks you want to output in the list `track_list`. For example, `track_list=[]`, or `track_list=["piano", "intro"]`.
 
-## Example
+## `midii.duration_secs_to_frames`
 
-### `print_tracks`
+`midii.duration_secs_to_frames(note_duration_sec, sr=22050, hop_length=512)`: convert times to frames with handling rounding error
+
+![](figure/comparison%20with%20librosa.time_to_frames.png)
+
+# Example
+
+## `print_tracks`
 
 - `print_tracks`: `mido.MidiFile.print_tracks` &rarr; `midii.MidiFile.print_tracks` 
 
@@ -63,7 +69,7 @@ If you want to convert midi file type `1` to `0`, pass `convert_1_to_0=True`.
 
     ![](figure/print2.png)
 
-### `quantize`
+## `quantize`
 
 - `quantize(unit="32")`: 
 
@@ -75,20 +81,20 @@ If you want to convert midi file type `1` to `0`, pass `convert_1_to_0=True`.
 
     ![](figure/q2.png)
 
-## Figure
+# Figure
 
-### quantization effect(piano roll)
+## quantization effect(piano roll)
 
 ![](figure/figure_piano_roll.png)
 
-### EF effect(time drift mitigating)
+## EF effect(time drift mitigating)
 
 ![](figure/figure_EF_w_wo_comparison.png)
 
-### timing deviation for each quantization units
+## timing deviation for each quantization units
 
 ![](figure/figure_timing_deviation.png)
 
-## License
+# License
 
 MIT

@@ -7,11 +7,15 @@ __all__ = [
 
 import numpy as np
 
+from .config import DEFAULT_HOP_LENGTH, DEFAULT_SAMPLING_RATE
+
 
 # Adapted from . (.py)
 # Source: https://github.com/././blob/main/..py
 # Original License: MIT
-def duration_secs_to_frames(note_duration_sec, sr, hop_length):
+def duration_secs_to_frames(
+    note_duration_sec, sr=DEFAULT_SAMPLING_RATE, hop_length=DEFAULT_HOP_LENGTH
+):
     """
     If the unit of the note duration is "seconds", the unit should be converted to "frames"
     Furthermore, it should be rounded to integer and this causes rounding error
