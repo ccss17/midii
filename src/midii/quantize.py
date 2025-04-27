@@ -23,16 +23,13 @@ def _quantize_w_error_forward(
         if ticks[i] + err >= 0:
             ticks[i] += err
             err = 0
-
-        q = ticks[i] // unit
-        r = ticks[i] - q * unit  # faster than % in tight loop
-
+        r = ticks[i] % unit
         if r * 2 < unit:  # round down
-            quantized_ticks[i] = q * unit
             err += r
+            quantized_ticks[i] = ticks[i] - r
         else:  # round up
-            quantized_ticks[i] = (q + 1) * unit
             err += r - unit
+            quantized_ticks[i] = ticks[i] + (unit - r)
     return quantized_ticks, err
 
 

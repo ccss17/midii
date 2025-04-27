@@ -1,5 +1,6 @@
 import midii
 import mido
+from numba import njit
 
 
 def test_sample():
@@ -138,14 +139,35 @@ def test_divmod(t, u):
     return q, r
 
 
+def test_remainder():
+    # for i in range(100_000):
+    # r = i % 7
+    for i in range(100_000):
+        q = i // 7
+        r = i - q * 7
+    return r
+
+
+@njit(cache=True, fastmath=True)
+def test_remainder_numba():
+    for i in range(100_000):
+        r = i % 7
+    # for i in range(100_000):
+    #     q = i // 7
+    #     r = i - q * 7
+    return r
+
+
 if __name__ == "__main__":
     # test_sample()
     # test_midii_simple_print_tracks()
     # test_midii_real_print_tracks()
     # test_mido_dataset_print_tracks()
     # test_midii_print_tracks()
-    test_midii_quantization()
-    test_version()
+    # test_midii_quantization()
+    # test_version()
     # test_midii_print_times()
     # test_standalone_quantize()
     # test_divmod(100, 18)
+    # test_remainder()
+    test_remainder_numba()
