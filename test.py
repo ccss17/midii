@@ -52,6 +52,12 @@ def test_midii_quantization():
     )
 
 
+def test_midii_quantization_function():
+    ticks = [2400, 944, 34, 2, 62]
+    q, e = midii.quantize(ticks, unit="32", ticks_per_beat=480)
+    print(q, e)
+
+
 def test_version():
     from importlib.metadata import version
     import platform
@@ -170,4 +176,5 @@ if __name__ == "__main__":
     # test_standalone_quantize()
     # test_divmod(100, 18)
     # test_remainder()
-    test_remainder_numba()
+    # test_remainder_numba()
+    test_midii_quantization_function()

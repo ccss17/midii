@@ -7,15 +7,10 @@ import midii
 
 mid = midii.MidiFile(
     midii.sample.dataset[0], # or 'song.mid'
-    convert_1_to_0=True, lyric_encoding="cp949"
+    lyric_encoding="cp949"
 )
 mid.quantize(unit="32")
-mid.print_tracks(
-    track_limit=None,
-    track_list=None,
-    print_note_info=True,
-    print_lyric=False,
-)
+mid.print_tracks()
 ```
 
 ## Installation
@@ -34,11 +29,9 @@ pip install midii
 
 - `simple`: List object that contains some simple midi dataset. It is artificially created midi file for test purpose.
 
-- `real`: List object that contains real-world midi examples.
-
 ##  `midii.quantize`
 
-`midii.quantize`: 
+`midii.quantize(ticks, unit="32", ticks_per_beat=480, error_forwarding=True)`: quantization function
 
 ## `class midii.MidiFile`
 
