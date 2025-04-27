@@ -164,6 +164,14 @@ def test_remainder_numba():
     return r
 
 
+def test_times_to_frames():
+    import librosa
+
+    print(librosa.time_to_frames(0.03125, hop_length=256))
+    print(midii.duration_secs_to_frames([0.03125], hop_length=256))
+    print(midii.duration_secs_to_frames(0.03125, hop_length=256))
+
+
 if __name__ == "__main__":
     # test_sample()
     # test_midii_simple_print_tracks()
@@ -177,4 +185,5 @@ if __name__ == "__main__":
     # test_divmod(100, 18)
     # test_remainder()
     # test_remainder_numba()
-    test_midii_quantization_function()
+    # test_midii_quantization_function()
+    test_times_to_frames()

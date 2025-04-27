@@ -1,6 +1,6 @@
 [project]
 name = "midii"
-version = "0.1.27"
+version = "0.1.28"
 description = "Midi Insights: midi analyzer"
 readme = "README.md"
 authors = [
@@ -27,4 +27,5 @@ dev = [
     "pytest>=7.0",
     "ipykernel>=6.29.0",
     "matplotlib>=3.7.0",
+    "librosa>=0.11.0",
 ]
