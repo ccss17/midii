@@ -2,40 +2,13 @@ __all__ = [
     "tick2beat",
     "beat2tick",
     "note_number_to_name",
-    "duration_secs_to_frames",
+    "second2frame",
+    "frame2second",
 ]
 
 import numpy as np
 
 from .config import DEFAULT_HOP_LENGTH, DEFAULT_SAMPLING_RATE
-
-
-# Adapted from . (.py)
-# Source: https://github.com/././blob/main/..py
-# Original License: MIT
-def duration_secs_to_frames(
-    note_duration_sec, sr=DEFAULT_SAMPLING_RATE, hop_length=DEFAULT_HOP_LENGTH
-):
-    """
-    If the unit of the note duration is "seconds", the unit should be converted to "frames"
-    Furthermore, it should be rounded to integer and this causes rounding error
-    This function includes error handling process that alleviates the rounding error
-    """
-    note_duration_sec = np.asarray(note_duration_sec)
-    frames_per_sec = sr / hop_length
-    note_duration_frame = note_duration_sec * frames_per_sec
-    note_duration_frame_int = note_duration_frame.copy().astype(np.int64)
-    errors = (
-        note_duration_frame - note_duration_frame_int
-    )  # rounding error per each note
-    errors_sum = int(np.sum(errors))
-    if errors_sum:
-        top_k_errors_idx = errors.argsort()[-errors_sum:][::-1]
-        if note_duration_frame_int.shape:
-            for i in top_k_errors_idx:
-                note_duration_frame_int[i] += 1
-
-    return note_duration_frame_int
 
 
 def tick2beat(tick, ticks_per_beat):
@@ -77,3 +50,32 @@ def note_number_to_name(note_number):
 
     # Get the semitone and the octave, and concatenate to create the name
     return semis[note_number % 12] + str(note_number // 12 - 1)
+
+
+def second2frame(
+    seconds, sr=DEFAULT_SAMPLING_RATE, hop_length=DEFAULT_HOP_LENGTH
+):
+    """
+    If the unit of the note duration is "seconds", the unit should be converted to "frames"
+    Furthermore, it should be rounded to integer and this causes rounding error
+    This function includes error handling process that alleviates the rounding error
+    """
+    seconds = np.asarray(seconds)
+    frames_per_sec = sr / hop_length
+    frames = seconds * frames_per_sec
+    frames_int = frames.copy().astype(np.int64)
+    errors = frames - frames_int  # rounding error per each note
+    errors_sum = int(np.sum(errors))
+    if errors_sum:
+        top_k_errors_idx = errors.argsort()[-errors_sum:][::-1]
+        if frames_int.shape:
+            for i in top_k_errors_idx:
+                frames_int[i] += 1
+
+    return frames_int
+
+
+def frame2second(
+    frames, sr=DEFAULT_SAMPLING_RATE, hop_length=DEFAULT_HOP_LENGTH
+):
+    return hop_length / sr * frames
