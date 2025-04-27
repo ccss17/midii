@@ -57,7 +57,7 @@ If you want to convert midi file type `1` to `0`, pass `convert_1_to_0=True`.
 
 `midii.duration_secs_to_frames(note_duration_sec, sr=22050, hop_length=512)`: convert times to frames with handling rounding error
 
-![](figure/comparison%20with%20librosa.time_to_frames.png)
+<!-- ![](figure/comparison%20with%20librosa.time_to_frames.png) -->
 
 # Example
 
