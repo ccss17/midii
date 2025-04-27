@@ -20,6 +20,10 @@ from .config import (
     DEFAULT_TIME_SIGNATURE,
 )
 from .quantize import quantize
+from .utilities import beat2tick
+from .note import Note
+
+_STR2BEAT = {n.value.name_short.split("/")[-1]: n.value.beat for n in Note}
 
 
 class MidiFile(mido.MidiFile):
@@ -60,11 +64,15 @@ class MidiFile(mido.MidiFile):
         error_forwarding=True,
         targets=["note_on", "note_off", "lyrics"],
     ):
+        try:
+            unit_beat = _STR2BEAT[unit]
+        except KeyError:
+            raise ValueError(f"unknown unit string {unit!r}")
+        unit_tick = beat2tick(unit_beat, self.ticks_per_beat)
         if self.type == 0:
             quantized_ticks, error = quantize(
                 ticks=self.times,
-                unit=unit,
-                ticks_per_beat=self.ticks_per_beat,
+                unit=unit_tick,
                 error_forwarding=error_forwarding,
             )
             quantized_ticks_iter = iter(quantized_ticks)
@@ -75,8 +83,7 @@ class MidiFile(mido.MidiFile):
             for track, track_times in zip(self.tracks, self.times):
                 quantized_ticks, error = quantize(
                     ticks=track_times,
-                    unit=unit,
-                    ticks_per_beat=self.ticks_per_beat,
+                    unit=unit_tick,
                     error_forwarding=error_forwarding,
                 )
                 quantized_ticks_iter = iter(quantized_ticks)

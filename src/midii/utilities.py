@@ -21,8 +21,7 @@ def duration_secs_to_frames(
     Furthermore, it should be rounded to integer and this causes rounding error
     This function includes error handling process that alleviates the rounding error
     """
-    if not isinstance(note_duration_sec, np.ndarray):
-        note_duration_sec = np.array(note_duration_sec)
+    note_duration_sec = np.asarray(note_duration_sec)
     frames_per_sec = sr / hop_length
     note_duration_frame = note_duration_sec * frames_per_sec
     note_duration_frame_int = note_duration_frame.copy().astype(np.int64)
