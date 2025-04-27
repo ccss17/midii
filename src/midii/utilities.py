@@ -1,4 +1,4 @@
-__all__ = ["tick2beat, beat2tick, note_number_to_name"]
+__all__ = ["tick2beat", "beat2tick", "note_number_to_name"]
 
 
 def tick2beat(tick, ticks_per_beat):
