@@ -60,19 +60,20 @@ def second2frame(
     Furthermore, it should be rounded to integer and this causes rounding error
     This function includes error handling process that alleviates the rounding error
     """
-    seconds = np.asarray(seconds)
+    is_scalar_input = np.isscalar(seconds)
+    seconds_arr = np.atleast_1d(seconds)
     frames_per_sec = sr / hop_length
-    frames = seconds * frames_per_sec
-    frames_int = frames.copy().astype(np.int64)
-    errors = frames - frames_int  # rounding error per each note
-    errors_sum = int(np.sum(errors))
-    if errors_sum:
-        top_k_errors_idx = errors.argsort()[-errors_sum:][::-1]
-        if frames_int.shape:
-            for i in top_k_errors_idx:
-                frames_int[i] += 1
-
-    return frames_int
+    frames = seconds_arr * frames_per_sec
+    frames_int = np.floor(frames).astype(np.int64)
+    errors = frames - frames_int
+    errors_sum = int(np.round(np.sum(errors)))
+    if errors_sum > 0 and not is_scalar_input:
+        top_k_errors_idx = np.argpartition(errors, -errors_sum)[-errors_sum:]
+        frames_int[top_k_errors_idx] += 1
+    if is_scalar_input:
+        return frames_int[0]
+    else:
+        return frames_int
 
 
 def frame2second(
