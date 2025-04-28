@@ -1,12 +1,9 @@
 import numpy as np
 from numba import njit
-from typing import Tuple
 
 
 @njit(cache=True, fastmath=True)
-def _quantize_w_error_forward(
-    ticks: np.ndarray, unit: int
-) -> Tuple[np.ndarray, int]:
+def _quantize_w_error_forward(ticks, unit):
     """
     Sequential quantization with error forwarding.
     Returns quantized ticks array + final accumulated error.
@@ -27,9 +24,7 @@ def _quantize_w_error_forward(
     return quantized_ticks, err
 
 
-def _quantize_wo_error_forward(
-    ticks: np.ndarray, unit: int
-) -> Tuple[np.ndarray, int]:
+def _quantize_wo_error_forward(ticks, unit):
     """
     Vectorised midpoint–round-half-up (no error carry).
     """
@@ -38,11 +33,12 @@ def _quantize_wo_error_forward(
     up = r * 2 >= unit
     quantized = (q + up.astype(np.int64)) * unit
     errors = np.where(up, r - unit, r)
-    return quantized, int(errors.sum())
+    return quantized, errors.sum()
 
 
 def quantize(ticks, unit, error_forwarding=True):
-    ticks_arr = np.asarray(ticks, dtype=np.int64)
+    # ticks_arr = np.asarray(ticks, dtype=np.int64)
+    ticks_arr = np.asarray(ticks)
 
     if error_forwarding:
         q, err = _quantize_w_error_forward(ticks_arr, unit)

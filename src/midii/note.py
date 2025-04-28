@@ -1,3 +1,6 @@
+__all__ = ["NOTE", "NOTE_ALL", "REST", "REST_ALL"]
+
+import types
 from collections import namedtuple
 from enum import Enum
 
@@ -7,7 +10,7 @@ NoteNamedTuple = namedtuple(
 )
 
 
-class Note(Enum):
+class _Note(Enum):
     WHOLE_NOTE = NoteNamedTuple(4, "whole note", "온음표", "𝅝", "n/1")
     HALF_NOTE = NoteNamedTuple(2, "half note", "2분음표", "𝅗𝅥", "n/2")
     QUARTER_NOTE = NoteNamedTuple(1, "quarter note", "4분음표", "♩", "n/4")
@@ -29,7 +32,7 @@ class Note(Enum):
     )
 
 
-class Rest(Enum):
+class _Rest(Enum):
     WHOLE_REST = NoteNamedTuple(4, "whole rest", "온쉼표", "𝄻", "r/1")
     HALF_REST = NoteNamedTuple(2, "half rest", "2분쉼표", "𝄼", "r/2")
     QUARTER_REST = NoteNamedTuple(1, "quarter rest", "4분쉼표", "𝄽", "r/4")
@@ -51,7 +54,7 @@ class Rest(Enum):
     )
 
 
-class Rest_all(Enum):
+class _Rest_all(Enum):
     DOTTED_OCTUPLE_WHOLE_REST = NoteNamedTuple(
         48, "dotted octuple whole rest", "점8온쉼표", "𝆶.", "r*8."
     )
@@ -126,7 +129,7 @@ class Rest_all(Enum):
     )
 
 
-class Note_all(Enum):
+class _Note_all(Enum):
     DOTTED_OCTUPLE_WHOLE_NOTE = NoteNamedTuple(
         48, "dotted octuple whole note", "점8온음표", "𝆶.", "n*8."
     )
@@ -199,3 +202,13 @@ class Note_all(Enum):
     TWO_HUNDRED_FIFTY_SIXTH_NOTE = NoteNamedTuple(
         0.015625, "two hundred fifty-sixth note", "256분음표", "𝅘𝅥𝅲", "n/256"
     )
+
+
+_note_data_dict = {member.name: member.value for member in _Note}
+_note_all_data_dict = {member.name: member.value for member in _Note_all}
+_rest_data_dict = {member.name: member.value for member in _Rest}
+_rest_all_data_dict = {member.name: member.value for member in _Rest_all}
+NOTE = types.MappingProxyType(_note_data_dict)
+NOTE_ALL = types.MappingProxyType(_note_all_data_dict)
+REST = types.MappingProxyType(_rest_data_dict)
+REST_ALL = types.MappingProxyType(_rest_all_data_dict)

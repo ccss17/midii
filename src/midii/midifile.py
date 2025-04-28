@@ -21,9 +21,9 @@ from .config import (
 )
 from .quantize import quantize
 from .utilities import beat2tick
-from .note import Note
+from .note import _Note
 
-_STR2BEAT = {n.value.name_short.split("/")[-1]: n.value.beat for n in Note}
+_STR2BEAT = {n.value.name_short.split("/")[-1]: n.value.beat for n in _Note}
 
 
 class MidiFile(mido.MidiFile):

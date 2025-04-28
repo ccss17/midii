@@ -3,8 +3,8 @@ import string
 import mido
 
 from .note import (
-    Note_all,
-    Rest_all,
+    _Note_all,
+    _Rest_all,
 )
 from .config import (
     DEFAULT_TICKS_PER_BEAT,
@@ -194,7 +194,7 @@ class MessageAnalyzer_SoundUnit(MessageAnalyzer):
         beat = tick2beat(tick, self.ticks_per_beat)
         min_error = float("inf")
         quantized_note = None
-        note_enum = Rest_all if as_rest else Note_all
+        note_enum = _Rest_all if as_rest else _Note_all
         for note in note_enum:
             error = note.value.beat - beat
             if abs(error) < min_error:

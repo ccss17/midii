@@ -1,6 +1,12 @@
-import midii
+from importlib.metadata import version
+import platform
+
+import numpy as np
 import mido
+import librosa
 from numba import njit
+
+import midii
 
 
 def test_sample():
@@ -59,9 +65,6 @@ def test_midii_quantization_function():
 
 
 def test_version():
-    from importlib.metadata import version
-    import platform
-
     pkgs = [
         "mido",
         "rich",
@@ -165,11 +168,79 @@ def test_remainder_numba():
 
 
 def test_times_to_frames():
-    import librosa
-
     print(librosa.time_to_frames(0.03125, hop_length=256))
     print(midii.duration_secs_to_frames([0.03125], hop_length=256))
     print(midii.duration_secs_to_frames(0.03125, hop_length=256))
+
+
+DEFAULT_SAMPLING_RATE = 22050
+DEFAULT_HOP_LENGTH = 256
+
+
+def second2frame_optimized(
+    seconds, sr=DEFAULT_SAMPLING_RATE, hop_length=DEFAULT_HOP_LENGTH
+):
+    """
+    [Optimized] 초 단위를 프레임 단위로 변환하며, 누적 오차를 완화합니다.
+    (Implementation from previous examples)
+    """
+    is_scalar_input = np.isscalar(seconds)
+    seconds_arr = np.atleast_1d(seconds)
+    frames_per_sec = sr / hop_length
+    frames = seconds_arr * frames_per_sec
+    frames_int = np.floor(frames).astype(np.int64)
+    errors = frames - frames_int
+    errors_sum = int(
+        np.round(np.sum(errors))
+    )  # 총 오차 합계 계산 시 반올림 추가
+    if errors_sum > 0 and not is_scalar_input:
+        top_k_errors_idx = np.argpartition(errors, -errors_sum)[-errors_sum:]
+        frames_int[top_k_errors_idx] += 1
+    if is_scalar_input:
+        return frames_int[0]
+    else:
+        return frames_int
+
+
+def test_continuous_quantization():
+    sampling_rate = 22050
+    hop_length = 256
+    tick_per_beat = 480
+    time_to_pos = (
+        16  # 1 beat (4분음표) 를 몇개로 나눌지. ==> 최소 단위가 64분음표
+    )
+    frames = np.load("test/ba_05004_+4_a_s01_f_02.npy")
+    print("frames", frames[:10], frames.sum())
+    seconds = midii.frame2second(
+        frames, sr=sampling_rate, hop_length=hop_length
+    )
+    print("seconds", seconds[-10:], seconds.sum())
+    unit_beats = midii.NOTE["SIXTY_FOURTH_NOTE"].beat
+    unit_ticks = midii.beat2tick(unit_beats, ticks_per_beat=tick_per_beat)
+    unit_seconds = mido.tick2second(
+        unit_ticks, ticks_per_beat=tick_per_beat, tempo=midii.DEFAULT_TEMPO
+    )
+    unit_frames = midii.second2frame(
+        unit_seconds, sr=sampling_rate, hop_length=hop_length
+    )
+    print("unit_beats", unit_beats)
+    print("unit_ticks", unit_ticks)
+    print("unit_seconds", unit_seconds)
+    print("unit_frames", unit_frames)
+    quantized_seconds, err = midii.quantize(seconds, unit=unit_seconds)
+    print(quantized_seconds[-10:], sum(quantized_seconds))
+    q_frames = midii.second2frame(
+        quantized_seconds, sr=sampling_rate, hop_length=hop_length
+    )
+    print(q_frames[:10], q_frames.sum())
+    q_frames_opt = second2frame_optimized(
+        quantized_seconds, sr=sampling_rate, hop_length=hop_length
+    )
+    print(q_frames_opt[:10], q_frames_opt.sum())
+    q_frames_rosa = librosa.time_to_frames(
+        quantized_seconds, sr=sampling_rate, hop_length=hop_length
+    )
+    print(q_frames_rosa[:10], q_frames_rosa.sum())
 
 
 if __name__ == "__main__":
@@ -186,4 +257,5 @@ if __name__ == "__main__":
     # test_remainder()
     # test_remainder_numba()
     # test_midii_quantization_function()
-    test_times_to_frames()
+    # test_times_to_frames()
+    test_continuous_quantization()
