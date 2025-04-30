@@ -28,7 +28,7 @@ def test_mido_dataset_print_tracks():
 
 def test_midii_print_tracks():
     ma = midii.MidiFile(
-        midii.sample.dataset[1], convert_1_to_0=True, lyric_encoding="cp949"
+        midii.sample.dataset[1], convert_1_to_0=True, lyric_encoding="utf-8"
     )
     ma.quantize(unit="32")
     ma.print_tracks()
@@ -103,7 +103,8 @@ def test_midii_quantization():
 
 def test_midii_quantization_function():
     ticks = [2400, 944, 34, 2, 62]
-    q, e = midii.quantize(ticks, unit="32", ticks_per_beat=480)
+    unit_tick = midii.beat2tick(midii.NOTE["n/32"].beat, ticks_per_beat=480)
+    q, e = midii.quantize(ticks, unit=unit_tick)
     print(q, e)
 
 
@@ -152,22 +153,23 @@ def test_standalone_quantize():
     )
     # subset = slice(0, 70)
     subset_last = slice(-33, None)
-    times_q32, error_q32 = midii.quantize(
-        ma.times, unit="32", ticks_per_beat=ma.ticks_per_beat
+    unit = midii.beat2tick(
+        midii.NOTE["n/32"].beat, ticks_per_beat=ma.ticks_per_beat
     )
-    times_q64, error_q64 = midii.quantize(
-        ma.times, unit="64", ticks_per_beat=ma.ticks_per_beat
-    )
-    times_q128, error_q128 = midii.quantize(
-        ma.times, unit="128", ticks_per_beat=ma.ticks_per_beat
-    )
+    times_q32, error_q32 = midii.quantize(ma.times, unit=unit)
+    # times_q64, error_q64 = midii.quantize(
+    #     ma.times, unit="64", ticks_per_beat=ma.ticks_per_beat
+    # )
+    # times_q128, error_q128 = midii.quantize(
+    #     ma.times, unit="128", ticks_per_beat=ma.ticks_per_beat
+    # )
     # print(ma.times[subset])
     print(ma.times[subset_last])
     ma.quantize()
     # print(ma.times[subset])
     # print(times_q32[subset])
-    print(ma.times[subset_last])
-    print(times_q32[subset_last])
+    print(ma.times[subset_last], type(ma.times[subset_last]))
+    print(times_q32[subset_last], type(times_q32[subset_last]))
     # print(times_q64[subset], error_q64)
     # print(times_q128[subset], error_q128)
     # print(times_q64[subset_last])
@@ -212,8 +214,8 @@ def test_remainder_numba():
 
 def test_times_to_frames():
     print(librosa.time_to_frames(0.03125, hop_length=256))
-    print(midii.duration_secs_to_frames([0.03125], hop_length=256))
-    print(midii.duration_secs_to_frames(0.03125, hop_length=256))
+    print(midii.second2frame([0.03125], hop_length=256))
+    print(midii.second2frame(0.03125, hop_length=256))
 
 
 DEFAULT_SAMPLING_RATE = 22050
@@ -231,7 +233,7 @@ def test_continuous_quantization():
         frames, sr=sampling_rate, hop_length=hop_length
     )
     print("seconds", seconds[-10:], seconds.sum())
-    unit_beats = midii.NOTE["SIXTY_FOURTH_NOTE"].beat
+    unit_beats = midii.NOTE["n/64"].beat
     unit_ticks = midii.beat2tick(unit_beats, ticks_per_beat=tick_per_beat)
     unit_seconds = mido.tick2second(
         unit_ticks, ticks_per_beat=tick_per_beat, tempo=midii.DEFAULT_TEMPO
@@ -333,26 +335,26 @@ def test_seconds_to_frames_loss_comparison():
 
 
 if __name__ == "__main__":
-    test_sample()
-    test_midii_simple_print_tracks()
-    test_mido_dataset_print_tracks()
-    test_midii_print_tracks()
-    test_midii_quantization()
+    # test_sample()
+    # test_midii_simple_print_tracks()
+    # test_mido_dataset_print_tracks()
+    # test_midii_print_tracks()
+    # test_midii_quantization()
 
-    test_midii_quantize()
-    test_to_json()
-    test_lyrics()
-    test_times()
-    test_EF_w_wo()
-    test_midi_type()
+    # test_midii_quantize()
+    # test_to_json()
+    # test_lyrics()
+    # test_times()
+    # test_EF_w_wo()
+    # test_midi_type()
 
-    test_version()
-    test_midii_print_times()
-    test_standalone_quantize()
-    test_divmod(100, 18)
-    test_remainder()
-    test_remainder_numba()
-    test_midii_quantization_function()
-    test_times_to_frames()
-    test_continuous_quantization()
+    # test_version()
+    # test_midii_print_times()
+    # test_standalone_quantize()
+    # test_divmod(100, 18)
+    # test_remainder()
+    # test_remainder_numba()
+    # test_midii_quantization_function()
+    # test_times_to_frames()
+    # test_continuous_quantization()
     test_seconds_to_frames_loss_comparison()

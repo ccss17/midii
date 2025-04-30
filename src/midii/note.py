@@ -204,10 +204,14 @@ class _Note_all(Enum):
     )
 
 
-_note_data_dict = {member.name: member.value for member in _Note}
-_note_all_data_dict = {member.name: member.value for member in _Note_all}
-_rest_data_dict = {member.name: member.value for member in _Rest}
-_rest_all_data_dict = {member.name: member.value for member in _Rest_all}
+_note_data_dict = {member.value.name_short: member.value for member in _Note}
+_note_all_data_dict = {
+    member.value.name_short: member.value for member in _Note_all
+}
+_rest_data_dict = {member.value.name_short: member.value for member in _Rest}
+_rest_all_data_dict = {
+    member.value.name_short: member.value for member in _Rest_all
+}
 NOTE = types.MappingProxyType(_note_data_dict)
 NOTE_ALL = types.MappingProxyType(_note_all_data_dict)
 REST = types.MappingProxyType(_rest_data_dict)

@@ -21,9 +21,7 @@ from .config import (
 )
 from .quantize import quantize
 from .utilities import beat2tick
-from .note import _Note
-
-_STR2BEAT = {n.value.name_short.split("/")[-1]: n.value.beat for n in _Note}
+from .note import NOTE
 
 
 class MidiFile(mido.MidiFile):
@@ -65,7 +63,7 @@ class MidiFile(mido.MidiFile):
         targets=["note_on", "note_off", "lyrics"],
     ):
         try:
-            unit_beat = _STR2BEAT[unit]
+            unit_beat = NOTE["n/" + unit].beat
         except KeyError:
             raise ValueError(f"unknown unit string {unit!r}")
         unit_tick = beat2tick(unit_beat, self.ticks_per_beat)

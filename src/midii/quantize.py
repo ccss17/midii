@@ -47,4 +47,4 @@ def quantize(ticks, unit, error_forwarding=True):
     else:
         q, err = _quantize_wo_error_forward(ticks_arr, unit)
 
-    return q, err
+    return q.tolist(), err
