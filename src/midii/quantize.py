@@ -37,9 +37,11 @@ def _quantize_wo_error_forward(ticks, unit):
 
 
 def quantize(ticks, unit, error_forwarding=True):
-    # ticks_arr = np.asarray(ticks, dtype=np.int64)
+    if unit <= 0:
+        raise ValueError
     ticks_arr = np.asarray(ticks)
 
+    print("unit", unit)
     if error_forwarding:
         q, err = _quantize_w_error_forward(ticks_arr, unit)
     else:

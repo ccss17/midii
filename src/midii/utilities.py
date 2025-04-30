@@ -20,7 +20,8 @@ def beat2tick(beat, ticks_per_beat):
 
 
 # Adapted from pretty_midi (utilities.py)
-# Source: https://github.com/craffel/pretty-midi/blob/main/pretty_midi/utilities.py
+# Source: https://github.com/craffel/pretty-midi
+# Copyright (c) 2014 Colin Raffel
 # Original License: MIT
 def note_number_to_name(note_number):
     """Convert a MIDI note number to its name, in the format
@@ -56,9 +57,10 @@ def second2frame(
     seconds, sr=DEFAULT_SAMPLING_RATE, hop_length=DEFAULT_HOP_LENGTH
 ):
     """
-    If the unit of the note duration is "seconds", the unit should be converted to "frames"
-    Furthermore, it should be rounded to integer and this causes rounding error
-    This function includes error handling process that alleviates the rounding error
+    If the unit of the note duration is "seconds", the unit should be
+    converted to "frames" Furthermore, it should be rounded to integer
+    and this causes rounding error This function includes error handling
+    process that alleviates the rounding error
     """
     is_scalar_input = np.isscalar(seconds)
     seconds_arr = np.atleast_1d(seconds)

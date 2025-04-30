@@ -31,7 +31,7 @@ pip install midii
 
 ##  `midii.quantize`
 
-`midii.quantize(ticks, unit="32", ticks_per_beat=480, error_forwarding=True)`: quantization function
+`midii.quantize(ticks, unit, error_forwarding=True)`: quantization function with mitigating quantization error by forwarding and managing error of previous quantization step to current quantization step
 
 ## `class midii.MidiFile`
 
@@ -45,7 +45,7 @@ If you want to convert midi file type `1` to `0`, pass `convert_1_to_0=True`.
 
 - `quantize(unit="32")`: Quantize note duration. You can define least unit of quantization from `"1"`(whole note), `"2"`(half note), `"4"`(quarter note), `"8"`(eighth note), `"16"`(sixteenth note), `"32"`(thirty-second note), `"64"`(sixty-fourth note), `"128"`(hundred twenty-eighth note), `"256"`(two hundred fifty-sixth note)
 
-    The smaller the minimum unit, the less sync error with the original, and the weaker the quantization effect. As the minimum unit becomes larger, the sync error with the original increases and the quantization effect increases.
+<!-- The smaller the minimum unit, the less sync error with the original, and the weaker the quantization effect. As the minimum unit becomes larger, the sync error with the original increases and the quantization effect increases. -->
 
 - `print_tracks(track_limit=None, print_note=True, print_time=True, print_lyric=False, track_list=None, print_note_info=False)`: An overriding function that improves the existing `mido.print_tracks`.
 
@@ -53,11 +53,47 @@ If you want to convert midi file type `1` to `0`, pass `convert_1_to_0=True`.
 
     By default it will prints all tracks. You can specify the tracks you want to output in the list `track_list`. For example, `track_list=[]`, or `track_list=["piano", "intro"]`.
 
-## `midii.duration_secs_to_frames`
+## `midii.second2frame`
 
-`midii.duration_secs_to_frames(note_duration_sec, sr=22050, hop_length=512)`: convert times to frames with handling rounding error
+`midii.second2frame(seconds, sr=22050, hop_length=512)`: convert times to frames with handling rounding error
 
-<!-- ![](figure/comparison%20with%20librosa.time_to_frames.png) -->
+### simple loss comparison test
+
+```
+ideal frames : Base + Fraction
+[107.594   97.5893  19.1057 111.1184  76.5198  25.4199 107.1373 126.879
+  79.2862  92.1725 121.5947 104.406  108.8866 135.4734  57.788    6.6442
+  92.4604  42.1106 134.8538  25.5506]
+
+seconds:
+[1.249164 1.13301  0.221816 1.290083 0.888393 0.295124 1.243862 1.473062
+ 0.920511 1.07012  1.411712 1.212151 1.264171 1.572843 0.670917 0.07714
+ 1.073463 0.488903 1.565649 0.296642]
+(20)
+------------------------------------------------------------
+'sum of ideal frames: 1672.5904
+  -> int conversion (floor): 1672
+  -> int conversion (round): 1673
+(sum of fractional parts: 9.5904)
+------------------------------------------------------------
+--- librosa.time_to_frames  ---
+[107  97  19 111  76  25 107 126  79  92 121 104 108 135  57   6  92  42
+ 134  25]
+
+total frames: 1663
+(vs ideal floor): -9 frames
+(vs ideal round): -10 frames
+(estimated loss: 9.59 frames)
+------------------------------------------------------------
+--- midii.second2frame ---
+converted frames:
+[108  98  19 111  77  25 107 127  79  92 122 104 109 135  58   7  92  42
+ 135  26]
+
+total frames: 1673
+(vs ideal floor): 1 frames
+(vs ideal round): 0 frames
+```
 
 # Example
 
