@@ -1,4 +1,4 @@
-[![PyPI version](https://img.shields.io/pypi/v/midii)](https://pypi.org/project/midii/) [![GitHub license](https://img.shields.io/github/license/ccss17/midii)](https://github.com/ccss17/midii/blob/main/LICENSE) 
+[![PyPI version](https://img.shields.io/pypi/v/midii)](https://pypi.org/project/midii/) [![GitHub license](https://img.shields.io/github/license/ccss17/midii)](https://github.com/ccss17/midii/blob/master/LICENSE) 
 
 # MIDI Insights
 
