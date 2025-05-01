@@ -1,3 +1,5 @@
+[![PyPI version](https://img.shields.io/pypi/v/midii)](https://pypi.org/project/midii/) [![GitHub license](https://img.shields.io/github/license/ccss17/midii)](https://github.com/ccss17/midii/blob/main/LICENSE) 
+
 # MIDI Insights
 
 This package inherits `MidiFile` of [`mido`](https://github.com/mido/mido), adding note duration quantization functionality `MidiFile.quantize` and improving the `MidiFile.print_tracks` method.
