@@ -53,6 +53,7 @@ def note_number_to_name(note_number):
     return semis[note_number % 12] + str(note_number // 12 - 1)
 
 
+# Contributed by Joshua-1995(https://github.com/Joshua-1995)
 def second2frame(
     seconds, sr=DEFAULT_SAMPLING_RATE, hop_length=DEFAULT_HOP_LENGTH
 ):
