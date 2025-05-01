@@ -51,7 +51,7 @@ pip install midii
 
 ##  `midii.quantize`
 
-`midii.quantize(ticks, unit, sync_error_mitigation=True)`: quantization function with mitigating quantization error by forwarding and managing error of previous quantization step to current quantization step with <b>generalized tick unit</b>. 
+`midii.quantize(ticks, unit, sync_error_mitigation=True)`: quantization function with mitigating quantization error by forwarding and managing error of previous quantization step to current quantization step with <b>generalized tick unit</b>, see `test_continuous_quantization()` of `test/test.py`. 
 
 - While the unit was assumed to be ticks for clarity, the unit parameter accepted by this function can represent the note's duration in units of beats (`float`), ticks (`int`), seconds (`float`), or frames (`int`). Consequently, while converting the note's duration to any unit space and subsequently performing normalization is permissible, attention must be paid to the loss incurred during float-to-integer conversion. Meanwhile, `midii.second2frame` is provided to mitigate the loss incurred during seconds-to-frames conversion
 
