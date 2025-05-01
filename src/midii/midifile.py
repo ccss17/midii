@@ -59,8 +59,8 @@ class MidiFile(mido.MidiFile):
     def quantize(
         self,
         unit,
-        error_forwarding=True,
         targets=["note_on", "note_off", "lyrics"],
+        sync_error_mitigation=True,
     ):
         try:
             unit_beat = NOTE["n/" + unit].beat
@@ -71,7 +71,7 @@ class MidiFile(mido.MidiFile):
             quantized_ticks, error = quantize(
                 self.times,
                 unit=unit_tick,
-                error_forwarding=error_forwarding,
+                sync_error_mitigation=sync_error_mitigation,
             )
             quantized_ticks_iter = iter(quantized_ticks)
             for msg in self.tracks[0]:
@@ -82,7 +82,7 @@ class MidiFile(mido.MidiFile):
                 quantized_ticks, error = quantize(
                     track_times,
                     unit=unit_tick,
-                    error_forwarding=error_forwarding,
+                    sync_error_mitigation=sync_error_mitigation,
                 )
                 quantized_ticks_iter = iter(quantized_ticks)
                 for msg in track:

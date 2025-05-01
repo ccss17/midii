@@ -87,7 +87,7 @@ def test_EF_w_wo():
     print(np.cumsum(np.array(ma.times, dtype=np.int64))[-10:])
     ma.quantize(unit="32")
     print(np.cumsum(np.array(ma.times, dtype=np.int64))[-10:])
-    ma2.quantize(unit="32", error_forwarding=False)
+    ma2.quantize(unit="32", sync_error_mitigation=False)
     print(np.cumsum(np.array(ma2.times, dtype=np.int64))[-10:])
 
 
@@ -104,7 +104,7 @@ def test_midii_quantization():
         lyric_encoding="cp949",
         # midii.sample.dataset[0], convert_1_to_0=True, lyric_encoding="cp949"
     )
-    ma.quantize(unit="32", error_forwarding=False)
+    ma.quantize(unit="32", sync_error_mitigation=False)
     ma.print_tracks(
         track_limit=None,
         track_list=None,

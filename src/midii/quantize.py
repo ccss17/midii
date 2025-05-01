@@ -37,13 +37,13 @@ def _quantize_wo_error_forward(targets, unit):
     return quantized, errors.sum()
 
 
-def quantize(target_list, unit, error_forwarding=True):
+def quantize(target_list, unit, sync_error_mitigation=True):
     if unit <= 0:
         raise ValueError
     target_list = np.asarray(target_list)
 
     print("unit", unit)
-    if error_forwarding:
+    if sync_error_mitigation:
         q, err = _quantize_w_error_forward(target_list, unit)
     else:
         q, err = _quantize_wo_error_forward(target_list, unit)
