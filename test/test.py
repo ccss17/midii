@@ -27,11 +27,22 @@ def test_mido_dataset_print_tracks():
 
 
 def test_midii_print_tracks():
-    ma = midii.MidiFile(
-        midii.sample.dataset[1], convert_1_to_0=True, lyric_encoding="utf-8"
-    )
-    ma.quantize(unit="32")
-    ma.print_tracks()
+    try:
+        ma = midii.MidiFile(
+            midii.sample.dataset[1],
+            convert_1_to_0=True,
+            lyric_encoding="utf-8",
+        )
+        ma.quantize(unit="32")
+        ma.print_tracks()
+    except UnicodeDecodeError:
+        ma = midii.MidiFile(
+            midii.sample.dataset[1],
+            convert_1_to_0=True,
+            lyric_encoding="cp949",
+        )
+        ma.quantize(unit="32")
+        ma.print_tracks()
 
 
 def test_midii_quantize():
@@ -48,7 +59,7 @@ def test_to_json():
         midii.sample.dataset[0], convert_1_to_0=True, lyric_encoding="cp949"
     )
     rprint(ma.to_json())
-    ma.quantize()
+    ma.quantize(unit="32")
     rprint(ma.to_json())
 
 
@@ -64,7 +75,7 @@ def test_times():
         midii.sample.dataset[0], convert_1_to_0=True, lyric_encoding="cp949"
     )
     print(ma.times)
-    ma.quantize()
+    ma.quantize(unit="32")
     print(ma.times)
 
 
@@ -74,9 +85,9 @@ def test_EF_w_wo():
     )
     ma2 = deepcopy(ma)
     print(np.cumsum(np.array(ma.times, dtype=np.int64))[-10:])
-    ma.quantize()
+    ma.quantize(unit="32")
     print(np.cumsum(np.array(ma.times, dtype=np.int64))[-10:])
-    ma2.quantize(error_forwarding=False)
+    ma2.quantize(unit="32", error_forwarding=False)
     print(np.cumsum(np.array(ma2.times, dtype=np.int64))[-10:])
 
 
@@ -165,7 +176,7 @@ def test_standalone_quantize():
     # )
     # print(ma.times[subset])
     print(ma.times[subset_last])
-    ma.quantize()
+    ma.quantize(unit="32")
     # print(ma.times[subset])
     # print(times_q32[subset])
     print(ma.times[subset_last], type(ma.times[subset_last]))
@@ -280,19 +291,19 @@ def test_seconds_to_frames_loss_comparison():
     print(np.round(ideal_float_frames, 4))
     print("\nseconds:")
     print(np.round(times_in_seconds, 6))
-    print(f"({num_durations})")
-    print("-" * 60)
+    # print(f"({num_durations})")
+    print(" " * 60)
 
     target_total_frames_float = np.sum(ideal_float_frames)
     target_total_frames_floor = np.floor(target_total_frames_float).astype(int)
     target_total_frames_round = np.round(target_total_frames_float).astype(int)
     total_fractional_parts = np.sum(fractional_parts)
 
-    print(f"'sum of ideal frames: {target_total_frames_float:.4f}")
+    print(f"sum of ideal frames: {target_total_frames_float:.4f}")
     print(f"  -> int conversion (floor): {target_total_frames_floor}")
     print(f"  -> int conversion (round): {target_total_frames_round}")
     print(f"(sum of fractional parts: {total_fractional_parts:.4f})")
-    print("-" * 60)
+    print(" " * 60)
 
     frames_librosa = librosa.time_to_frames(
         times_in_seconds, sr=sr, hop_length=hop_length
@@ -306,13 +317,14 @@ def test_seconds_to_frames_loss_comparison():
     )
 
     print("--- librosa.time_to_frames  ---")
+    print("converted frames:")
     print(frames_librosa)
     print(f"\ntotal frames: {total_frames_librosa}")
     print(f"(vs ideal floor): {diff_librosa_vs_target_floor} frames")
     print(f"(vs ideal round): {diff_librosa_vs_target_round} frames")
-    print(f"(estimated loss: {total_fractional_parts:.2f} frames)")
+    # print(f"(estimated loss: {total_fractional_parts:.2f} frames)")
 
-    print("-" * 60)
+    print(" " * 60)
 
     # frames_optimized = second2frame_optimized(
     frames_optimized = midii.second2frame(
@@ -335,26 +347,26 @@ def test_seconds_to_frames_loss_comparison():
 
 
 if __name__ == "__main__":
-    # test_sample()
-    # test_midii_simple_print_tracks()
-    # test_mido_dataset_print_tracks()
-    # test_midii_print_tracks()
-    # test_midii_quantization()
+    test_sample()
+    test_midii_simple_print_tracks()
+    test_mido_dataset_print_tracks()
+    test_midii_print_tracks()
+    test_midii_quantization()
 
-    # test_midii_quantize()
-    # test_to_json()
-    # test_lyrics()
-    # test_times()
-    # test_EF_w_wo()
-    # test_midi_type()
+    test_midii_quantize()
+    test_to_json()
+    test_lyrics()
+    test_times()
+    test_EF_w_wo()
+    test_midi_type()
 
-    # test_version()
-    # test_midii_print_times()
-    # test_standalone_quantize()
-    # test_divmod(100, 18)
-    # test_remainder()
-    # test_remainder_numba()
-    # test_midii_quantization_function()
-    # test_times_to_frames()
-    # test_continuous_quantization()
+    test_version()
+    test_midii_print_times()
+    test_standalone_quantize()
+    test_divmod(100, 18)
+    test_remainder()
+    test_remainder_numba()
+    test_midii_quantization_function()
+    test_times_to_frames()
+    test_continuous_quantization()
     test_seconds_to_frames_loss_comparison()

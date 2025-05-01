@@ -58,7 +58,7 @@ class MidiFile(mido.MidiFile):
 
     def quantize(
         self,
-        unit="32",
+        unit,
         error_forwarding=True,
         targets=["note_on", "note_off", "lyrics"],
     ):
@@ -69,7 +69,7 @@ class MidiFile(mido.MidiFile):
         unit_tick = beat2tick(unit_beat, self.ticks_per_beat)
         if self.type == 0:
             quantized_ticks, error = quantize(
-                ticks=self.times,
+                self.times,
                 unit=unit_tick,
                 error_forwarding=error_forwarding,
             )
@@ -80,7 +80,7 @@ class MidiFile(mido.MidiFile):
         elif self.type == 1:
             for track, track_times in zip(self.tracks, self.times):
                 quantized_ticks, error = quantize(
-                    ticks=track_times,
+                    track_times,
                     unit=unit_tick,
                     error_forwarding=error_forwarding,
                 )
