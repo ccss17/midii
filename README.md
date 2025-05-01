@@ -9,7 +9,7 @@ import midii
 
 mid = midii.MidiFile(
     midii.sample.dataset[0], # or 'song.mid'
-    lyric_encoding="utf-8"
+    lyric_encoding="utf-8" # or some lyric encoding for your MIDI file
 )
 mid.quantize(unit="32")
 mid.print_tracks()
@@ -27,8 +27,9 @@ Delta-time (of MIDI event like note on, note off) quantization aligns the timing
 
 For `TPQN=480`, converting the irregular tick sequence `[2400, 944, 34, 2, 62]` to beats yields `[5.0, 1.97, 0.07, 0.004, 0.13]`. Quantization aims to make these beats consist only of multiples of 0.125 beats (32nd notes). A simple quantization method approximates each note duration to the nearest rhythm grid line, resulting in the quantized sequence `[4, 2, 0.125, 0, 0.125]`. This effectively regularizes the unregularized notes into a whole note, half note, 32nd note, rest, and 32nd note, respectively.
 
-However, in this method, the numerical error generated during each approximation is simply discarded. This error accumulates for each note, causing the overall timing of the quantized sequence to progressively deviate from the original timing. Therefore, it is necessary to handle the error generated at each step, which motivates the error propagation quantization mechanism implemented in this package.
+However, in this method, the numerical error generated during each approximation is simply discarded. This error accumulates for each note, causing the overall timing of the quantized sequence to progressively deviate from the original timing. Therefore, it is necessary to handle the error generated at each step, which motivates the error propagation quantization mechanism(below pseudocode) implemented in this package. This pseudocode assumes a constant set `quanta=[4, 2, 1, 0.5, 0.25, 0.125, 0.0625, 0.03125, 0.015625]`, which includes the beat values of standard musical notes from whole notes to 256th notes.
 
+![](figure/pseudocode.png)
 
 <!-- In experiments, the proposed method reduced the Mean Absolute Error (MAE) from 334.94 ticks to 3.78 ticks compared to simple quantization, achieving an error reduction rate of approximately 98.87\%. The proposed method is useful for improving the quality and stability of SVS models by correcting note duration errors when training with public MIDI data. -->
 
@@ -50,7 +51,9 @@ pip install midii
 
 ##  `midii.quantize`
 
-`midii.quantize(ticks, unit, sync_error_mitigation=True)`: quantization function with mitigating quantization error by forwarding and managing error of previous quantization step to current quantization step
+`midii.quantize(ticks, unit, sync_error_mitigation=True)`: quantization function with mitigating quantization error by forwarding and managing error of previous quantization step to current quantization step with <b>generalized tick unit</b>. 
+
+- While the unit was assumed to be ticks for clarity, the unit parameter accepted by this function can represent the note's duration in units of beats (`float`), ticks (`int`), seconds (`float`), or frames (`int`). Consequently, while converting the note's duration to any unit space and subsequently performing normalization is permissible, attention must be paid to the loss incurred during float-to-integer conversion. Meanwhile, `midii.second2frame` is provided to mitigate the loss incurred during seconds-to-frames conversion
 
 ## `class midii.MidiFile`
 
