@@ -65,18 +65,26 @@ def second2frame(
     """
     is_scalar_input = np.isscalar(seconds)
     seconds_arr = np.atleast_1d(seconds)
+
+    if seconds_arr.size == 0:
+        return np.array([], dtype=np.int64) if not is_scalar_input else 0
+
     frames_per_sec = sr / hop_length
-    frames = seconds_arr * frames_per_sec
-    frames_int = np.floor(frames).astype(np.int64)
-    errors = frames - frames_int
+    frames_float_arr = seconds_arr * frames_per_sec
+
+    frames_int_arr = np.floor(frames_float_arr).astype(np.int64)
+    errors = frames_float_arr - frames_int_arr
+
     errors_sum = int(np.round(np.sum(errors)))
-    if errors_sum > 0 and not is_scalar_input:
+
+    if errors_sum > 0:
         top_k_errors_idx = np.argpartition(errors, -errors_sum)[-errors_sum:]
-        frames_int[top_k_errors_idx] += 1
+        frames_int_arr[top_k_errors_idx] += 1
+
     if is_scalar_input:
-        return frames_int[0]
+        return frames_int_arr[0]
     else:
-        return frames_int
+        return frames_int_arr
 
 
 def frame2second(
