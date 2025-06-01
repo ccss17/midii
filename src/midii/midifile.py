@@ -1,7 +1,10 @@
+import pathlib
+
 import mido
 from rich import print as rprint
 from rich.console import Console
 from rich.panel import Panel
+from collections import Counter
 
 from .messages import (
     MessageAnalyzer_text,
@@ -59,7 +62,7 @@ class MidiFile(mido.MidiFile):
     def quantize(
         self,
         unit,
-        targets=["note_on", "note_off", "lyrics"],
+        # targets=["note_on", "note_off", "lyrics"],
         sync_error_mitigation=True,
     ):
         try:
@@ -75,8 +78,8 @@ class MidiFile(mido.MidiFile):
             )
             quantized_ticks_iter = iter(quantized_ticks)
             for msg in self.tracks[0]:
-                if msg.type in targets:
-                    msg.time = next(quantized_ticks_iter)
+                # if msg.type in targets:
+                msg.time = next(quantized_ticks_iter)
         elif self.type == 1:
             for track, track_times in zip(self.tracks, self.times):
                 quantized_ticks, error = quantize(
@@ -86,8 +89,8 @@ class MidiFile(mido.MidiFile):
                 )
                 quantized_ticks_iter = iter(quantized_ticks)
                 for msg in track:
-                    if msg.type in targets:
-                        msg.time = next(quantized_ticks_iter)
+                    # if msg.type in targets:
+                    msg.time = next(quantized_ticks_iter)
         else:  # type == 2
             raise NotImplementedError
 
@@ -213,10 +216,11 @@ class MidiFile(mido.MidiFile):
                 f"total duration: {self.length}[/{header_style}]",
             ]
         )
+        file_path_obj = pathlib.Path(self.filename)
         return Panel(
             header_info,
-            title="[MIDI File Header]",
-            subtitle=f"{self.filename}",
+            title=file_path_obj.name,
+            subtitle=file_path_obj.parent,
             style=f"{header_style}",
             border_style=f"{header_style}",
         )
@@ -332,14 +336,14 @@ class MidiFile(mido.MidiFile):
             return [
                 msg.time
                 for msg in self.tracks[0]
-                if msg.type in ["note_on", "note_off", "lyrics"]
+                # if msg.type in ["note_on", "note_off", "lyrics"]
             ]
         elif self.type == 1:
             return [
                 [
                     msg.time
                     for msg in track
-                    if msg.type in ["note_on", "note_off", "lyrics"]
+                    # if msg.type in ["note_on", "note_off", "lyrics"]
                 ]
                 for track in self.tracks
             ]
@@ -367,3 +371,17 @@ class MidiFile(mido.MidiFile):
         elif self.type == 2:
             raise NotImplementedError
         return lyrics
+
+    def tempo_rank(self):
+        if self.type == 1 and not self.convert_1_to_0:
+            raise RuntimeError
+        tempo = DEFAULT_TEMPO
+        tempo_counts = Counter()
+        for msg in self.tracks[0]:
+            if msg.time > 0:
+                tempo_counts[tempo] += 1
+            if msg.type == "set_tempo":
+                tempo = msg.tempo
+        return sorted(
+            tempo_counts.items(), key=lambda item: item[1], reverse=True
+        )
