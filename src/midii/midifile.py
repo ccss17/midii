@@ -119,6 +119,7 @@ class MidiFile(mido.MidiFile):
         if track_limit is None:
             track_limit = float("inf")
         total_time = 0
+        printing = []
         for i, msg in enumerate(track):
             if i > track_limit:
                 break
@@ -194,7 +195,8 @@ class MidiFile(mido.MidiFile):
 
             _str = str(ma)
             if _str:
-                rprint(_str)
+                printing.append(str(ma))
+                # rprint(_str)
 
             if msg.type in ["note_on", "note_off", "lyrics"]:
                 note_num += 1
@@ -204,7 +206,10 @@ class MidiFile(mido.MidiFile):
             ticks_per_beat=self.ticks_per_beat,
             tempo=tempo,
         )
-        rprint("Total secs/time: " + f"{current_time}/{total_time}")
+
+        printing.append("Total secs/time: " + f"{current_time}/{total_time}")
+        # rprint("Total secs/time: " + f"{current_time}/{total_time}")
+        rprint("\n".join(printing))
 
     def _panel(self):
         # meta information of midi file
@@ -220,7 +225,7 @@ class MidiFile(mido.MidiFile):
         return Panel(
             header_info,
             title=file_path_obj.name,
-            subtitle=file_path_obj.parent,
+            subtitle=str(file_path_obj.parent),
             style=f"{header_style}",
             border_style=f"{header_style}",
         )
