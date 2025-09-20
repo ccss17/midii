@@ -29,7 +29,7 @@ For `TPQN=480`, converting the irregular tick sequence `[2400, 944, 34, 2, 62]` 
 
 However, in this method, the numerical error generated during each approximation is simply discarded. This error accumulates for each note, causing the overall timing of the quantized sequence to progressively deviate from the original timing. Therefore, it is necessary to handle the error generated at each step, which motivates the error propagation quantization mechanism(below pseudocode) implemented in this package. This pseudocode assumes a constant set `quanta=[4, 2, 1, 0.5, 0.25, 0.125, 0.0625, 0.03125, 0.015625]`, which includes the beat values of standard musical notes from whole notes to 256th notes.
 
-![](figure/pseudocode.png)
+<!-- ![](figure/pseudocode.png) -->
 
 <!-- In experiments, the proposed method reduced the Mean Absolute Error (MAE) from 334.94 ticks to 3.78 ticks compared to simple quantization, achieving an error reduction rate of approximately 98.87\%. The proposed method is useful for improving the quality and stability of SVS models by correcting note duration errors when training with public MIDI data. -->
 
